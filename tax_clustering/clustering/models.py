@@ -1,3 +1,5 @@
+# clustering/models.py
+
 import uuid
 from django.db import models
 
@@ -34,8 +36,19 @@ class ClusteringJob(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     result_file = models.FileField(upload_to='results/', null=True, blank=True)
-    metrics = models.JSONField(null=True, blank=True)  # Поле для хранения метрик
-    visualizations = models.JSONField(null=True, blank=True)  # Поле для хранения URL визуализаций
+    metrics = models.JSONField(null=True, blank=True)  # Добавленное поле
+    visualizations = models.JSONField(null=True, blank=True)
+
+    # Поля для отслеживания стадий обработки
+    preprocessing_completed = models.BooleanField(default=False)
+    feature_selection_completed = models.BooleanField(default=False)
+    dimensionality_reduction_completed = models.BooleanField(default=False)
+    clustering_completed = models.BooleanField(default=False)
+    metrics_completed = models.BooleanField(default=False)
+    visualization_completed = models.BooleanField(default=False)
+
+    # Поле для хранения промежуточных данных
+    intermediate_data = models.FileField(upload_to='intermediate/', null=True, blank=True)
 
     def __str__(self):
         return f"Job {self.id} - {self.status}"

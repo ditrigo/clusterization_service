@@ -24,7 +24,7 @@ def visualize_clusters(data, cluster_column, features, job_id):
     - Матрица расстояний
     - Дендограмма
     - Scatter Plot
-    
+
     :param data: DataFrame, содержащий данные и метки кластеров
     :param cluster_column: str, название столбца с метками кластеров
     :param features: список с названиями столбцов, содержащих признаки

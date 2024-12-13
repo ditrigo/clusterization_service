@@ -25,7 +25,6 @@ class ClusteringParametersSerializer(serializers.ModelSerializer):
             'feature_selection_method',
             'dimensionality_reduction_method',
             'clustering_algorithm',
-            'parameters',
             'feature_selection',
             'dimensionality_reduction',
             'clustering'
@@ -50,6 +49,14 @@ class ClusteringJobSerializer(serializers.ModelSerializer):
     metrics = serializers.JSONField(read_only=True)
     visualizations = serializers.JSONField(read_only=True)
 
+    # Поля для отслеживания стадий обработки
+    preprocessing_completed = serializers.BooleanField(read_only=True)
+    feature_selection_completed = serializers.BooleanField(read_only=True)
+    dimensionality_reduction_completed = serializers.BooleanField(read_only=True)
+    clustering_completed = serializers.BooleanField(read_only=True)
+    metrics_completed = serializers.BooleanField(read_only=True)
+    visualization_completed = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = ClusteringJob
         fields = [
@@ -62,9 +69,24 @@ class ClusteringJobSerializer(serializers.ModelSerializer):
             'result_file_url',
             'parameters',
             'metrics',
-            'visualizations'
+            'visualizations',
+            'preprocessing_completed',
+            'feature_selection_completed',
+            'dimensionality_reduction_completed',
+            'clustering_completed',
+            'metrics_completed',
+            'visualization_completed',
         ]
-        read_only_fields = ['status', 'created_at', 'completed_at', 'result_file', 'metrics', 'visualizations']
+        read_only_fields = [
+            'status', 'created_at', 'completed_at', 'result_file',
+            'metrics', 'visualizations',
+            'preprocessing_completed',
+            'feature_selection_completed',
+            'dimensionality_reduction_completed',
+            'clustering_completed',
+            'metrics_completed',
+            'visualization_completed',
+        ]
 
     def get_result_file_url(self, obj):
         request = self.context.get('request')
