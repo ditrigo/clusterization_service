@@ -1,0 +1,381 @@
+<!-- frontend/templates/frontend/create_job.html -->
+
+{% extends 'frontend/base.html' %}
+
+{% block title %}Создать Задание{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Создать Кластеризационное Задание</h2>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="dataset" class="form-label">Выберите Датасет:</label>
+            <select id="dataset" name="dataset" class="form-select" required>
+                <option value="">--Выберите--</option>
+                {% for dataset in datasets %}
+                    <option value="{{ dataset.id }}">{{ dataset.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">
+                Пожалуйста, выберите датасет.
+            </div>
+        </div>
+        
+        <fieldset class="mb-3">
+            <legend>Отбор Признаков</legend>
+            <div class="mb-3">
+                <label for="feature_selection_method" class="form-label">Метод:</label>
+                <select id="feature_selection_method" name="feature_selection_method" class="form-select" required>
+                    <option value="">--Выберите--</option>
+                    <option value="Correlation">Correlation</option>
+                    <option value="KMeans">KMeans</option>
+                    <option value="Mutual Information">Mutual Information</option>
+                    <option value="Variance Threshold">Variance Threshold</option>
+                    <option value="PCA">PCA</option>
+                    <option value="t-SNE">t-SNE</option>
+                </select>
+                <div class="invalid-feedback">
+                    Пожалуйста, выберите метод отбора признаков.
+                </div>
+            </div>
+            
+            <!-- Параметры для различных методов -->
+            <div id="feature_selection_params">
+                <!-- Пример для Correlation -->
+                <div class="param-group" id="param_Correlation" style="display:none;">
+                    <div class="mb-3">
+                        <label for="threshold" class="form-label">Threshold:</label>
+                        <input type="number" step="0.01" id="threshold" name="threshold" class="form-control" value="0.6" min="0" max="1">
+                    </div>
+                </div>
+                
+                <!-- Пример для KMeans -->
+                <div class="param-group" id="param_KMeans" style="display:none;">
+                    <div class="mb-3">
+                        <label for="kmeans_n_clusters" class="form-label">Number of Clusters:</label>
+                        <input type="number" id="kmeans_n_clusters" name="kmeans_n_clusters" class="form-control" value="3" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="kmeans_top_n" class="form-label">Top N Features:</label>
+                        <input type="number" id="kmeans_top_n" name="kmeans_top_n" class="form-control" value="5" min="1">
+                    </div>
+                </div>
+                
+                <!-- Пример для Mutual Information -->
+                <div class="param-group" id="param_Mutual Information" style="display:none;">
+                    <div class="mb-3">
+                        <label for="mi_n_clusters" class="form-label">Number of Clusters:</label>
+                        <input type="number" id="mi_n_clusters" name="mi_n_clusters" class="form-control" value="3" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mi_top_n" class="form-label">Top N Features:</label>
+                        <input type="number" id="mi_top_n" name="mi_top_n" class="form-control" value="5" min="1">
+                    </div>
+                </div>
+                
+                <!-- Пример для Variance Threshold -->
+                <div class="param-group" id="param_Variance Threshold" style="display:none;">
+                    <div class="mb-3">
+                        <label for="variance_threshold" class="form-label">Variance Threshold:</label>
+                        <input type="number" step="0.01" id="variance_threshold" name="variance_threshold" class="form-control" value="0.1" min="0">
+                    </div>
+                </div>
+                
+                <!-- Пример для PCA -->
+                <div class="param-group" id="param_PCA" style="display:none;">
+                    <div class="mb-3">
+                        <label for="pca_n_components" class="form-label">Number of Components:</label>
+                        <input type="number" id="pca_n_components" name="pca_n_components" class="form-control" value="5" min="1">
+                    </div>
+                </div>
+                
+                <!-- Пример для t-SNE -->
+                <div class="param-group" id="param_t-SNE" style="display:none;">
+                    <div class="mb-3">
+                        <label for="tsne_n_components" class="form-label">Number of Components:</label>
+                        <input type="number" id="tsne_n_components" name="tsne_n_components" class="form-control" value="2" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="tsne_perplexity" class="form-label">Perplexity:</label>
+                        <input type="number" step="0.1" id="tsne_perplexity" name="tsne_perplexity" class="form-control" value="30" min="5">
+                    </div>
+                    <div class="mb-3">
+                        <label for="tsne_learning_rate" class="form-label">Learning Rate:</label>
+                        <input type="number" step="1" id="tsne_learning_rate" name="tsne_learning_rate" class="form-control" value="200" min="10">
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <fieldset class="mb-3">
+            <legend>Снижение Размерности</legend>
+            <div class="mb-3">
+                <label for="dimensionality_reduction_method" class="form-label">Метод:</label>
+                <select id="dimensionality_reduction_method" name="dimensionality_reduction_method" class="form-select" required>
+                    <option value="">--Выберите--</option>
+                    <option value="Autoencoder">Autoencoder</option>
+                    <option value="Kernel PCA">Kernel PCA</option>
+                    <option value="Factor Analysis">Factor Analysis</option>
+                    <option value="UMAP">UMAP</option>
+                </select>
+                <div class="invalid-feedback">
+                    Пожалуйста, выберите метод снижения размерности.
+                </div>
+            </div>
+            
+            <!-- Параметры для различных методов -->
+            <div id="dimensionality_reduction_params">
+                <!-- Пример для Autoencoder -->
+                <div class="param-group" id="dim_param_Autoencoder" style="display:none;">
+                    <div class="mb-3">
+                        <label for="autoencoder_encoding_dim" class="form-label">Encoding Dimension:</label>
+                        <input type="number" id="autoencoder_encoding_dim" name="autoencoder_encoding_dim" class="form-control" value="10" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="autoencoder_epochs" class="form-label">Epochs:</label>
+                        <input type="number" id="autoencoder_epochs" name="autoencoder_epochs" class="form-control" value="50" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="autoencoder_batch_size" class="form-label">Batch Size:</label>
+                        <input type="number" id="autoencoder_batch_size" name="autoencoder_batch_size" class="form-control" value="32" min="1">
+                    </div>
+                </div>
+                
+                <!-- Пример для Kernel PCA -->
+                <div class="param-group" id="dim_param_Kernel PCA" style="display:none;">
+                    <div class="mb-3">
+                        <label for="kernelpca_n_components" class="form-label">Number of Components:</label>
+                        <input type="number" id="kernelpca_n_components" name="kernelpca_n_components" class="form-control" value="10" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="kernelpca_kernel" class="form-label">Kernel:</label>
+                        <select id="kernelpca_kernel" name="kernelpca_kernel" class="form-select">
+                            <option value="rbf">RBF</option>
+                            <option value="linear">Linear</option>
+                            <option value="poly">Polynomial</option>
+                            <!-- Добавьте другие ядра, если необходимо -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="kernelpca_gamma" class="form-label">Gamma:</label>
+                        <input type="number" step="0.01" id="kernelpca_gamma" name="kernelpca_gamma" class="form-control" value="" min="0">
+                    </div>
+                </div>
+                
+                <!-- Пример для Factor Analysis -->
+                <div class="param-group" id="dim_param_Factor Analysis" style="display:none;">
+                    <div class="mb-3">
+                        <label for="factor_analysis_n_components" class="form-label">Number of Components:</label>
+                        <input type="number" id="factor_analysis_n_components" name="factor_analysis_n_components" class="form-control" value="10" min="1">
+                    </div>
+                </div>
+                
+                <!-- Пример для UMAP -->
+                <div class="param-group" id="dim_param_UMAP" style="display:none;">
+                    <div class="mb-3">
+                        <label for="umap_n_neighbors" class="form-label">Number of Neighbors:</label>
+                        <input type="number" id="umap_n_neighbors" name="umap_n_neighbors" class="form-control" value="15" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="umap_min_dist" class="form-label">Min Dist:</label>
+                        <input type="number" step="0.01" id="umap_min_dist" name="umap_min_dist" class="form-control" value="0.1" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="umap_n_components" class="form-label">Number of Components:</label>
+                        <input type="number" id="umap_n_components" name="umap_n_components" class="form-control" value="10" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="umap_random_state" class="form-label">Random State:</label>
+                        <input type="number" id="umap_random_state" name="umap_random_state" class="form-control" value="42" min="0">
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <fieldset class="mb-3">
+            <legend>Кластеризация</legend>
+            <div class="mb-3">
+                <label for="clustering_algorithm" class="form-label">Алгоритм:</label>
+                <select id="clustering_algorithm" name="clustering_algorithm" class="form-select" required>
+                    <option value="">--Выберите--</option>
+                    <option value="DBSCAN">DBSCAN</option>
+                    <option value="GMM">GMM</option>
+                    <option value="Hierarchical">Hierarchical</option>
+                    <option value="KMeans">KMeans</option>
+                    <option value="OPTICS">OPTICS</option>
+                    <option value="Spectral">Spectral</option>
+                </select>
+                <div class="invalid-feedback">
+                    Пожалуйста, выберите алгоритм кластеризации.
+                </div>
+            </div>
+            
+            <!-- Параметры для различных алгоритмов кластеризации -->
+            <div id="clustering_params">
+                <!-- Пример для DBSCAN -->
+                <div class="clustering-param-group" id="clustering_param_DBSCAN" style="display:none;">
+                    <div class="mb-3">
+                        <label for="dbscan_eps" class="form-label">Epsilon (eps):</label>
+                        <input type="number" step="0.01" id="dbscan_eps" name="dbscan_eps" class="form-control" value="1.5" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="dbscan_min_samples" class="form-label">Min Samples:</label>
+                        <input type="number" id="dbscan_min_samples" name="dbscan_min_samples" class="form-control" value="5" min="1">
+                    </div>
+                </div>
+                
+                <!-- Пример для GMM -->
+                <div class="clustering-param-group" id="clustering_param_GMM" style="display:none;">
+                    <div class="mb-3">
+                        <label for="gmm_n_components" class="form-label">Number of Components:</label>
+                        <input type="number" id="gmm_n_components" name="gmm_n_components" class="form-control" value="6" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="gmm_random_state" class="form-label">Random State:</label>
+                        <input type="number" id="gmm_random_state" name="gmm_random_state" class="form-control" value="42" min="0">
+                    </div>
+                </div>
+                
+                <!-- Пример для Hierarchical -->
+                <div class="clustering-param-group" id="clustering_param_Hierarchical" style="display:none;">
+                    <div class="mb-3">
+                        <label for="hierarchical_n_clusters" class="form-label">Number of Clusters:</label>
+                        <input type="number" id="hierarchical_n_clusters" name="hierarchical_n_clusters" class="form-control" value="3" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="hierarchical_linkage" class="form-label">Linkage:</label>
+                        <select id="hierarchical_linkage" name="hierarchical_linkage" class="form-select">
+                            <option value="ward">Ward</option>
+                            <option value="complete">Complete</option>
+                            <option value="average">Average</option>
+                            <option value="single">Single</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Пример для KMeans -->
+                <div class="clustering-param-group" id="clustering_param_KMeans" style="display:none;">
+                    <div class="mb-3">
+                        <label for="kmeans_n_clusters" class="form-label">Number of Clusters:</label>
+                        <input type="number" id="kmeans_n_clusters" name="kmeans_n_clusters" class="form-control" value="3" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="kmeans_random_state" class="form-label">Random State:</label>
+                        <input type="number" id="kmeans_random_state" name="kmeans_random_state" class="form-control" value="42" min="0">
+                    </div>
+                </div>
+                
+                <!-- Пример для OPTICS -->
+                <div class="clustering-param-group" id="clustering_param_OPTICS" style="display:none;">
+                    <div class="mb-3">
+                        <label for="optics_min_samples" class="form-label">Min Samples:</label>
+                        <input type="number" id="optics_min_samples" name="optics_min_samples" class="form-control" value="10" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="optics_xi" class="form-label">Xi:</label>
+                        <input type="number" step="0.01" id="optics_xi" name="optics_xi" class="form-control" value="0.05" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label for="optics_min_cluster_size" class="form-label">Min Cluster Size:</label>
+                        <input type="number" step="0.01" id="optics_min_cluster_size" name="optics_min_cluster_size" class="form-control" value="0.1" min="0">
+                    </div>
+                </div>
+                
+                <!-- Пример для Spectral -->
+                <div class="clustering-param-group" id="clustering_param_Spectral" style="display:none;">
+                    <div class="mb-3">
+                        <label for="spectral_n_clusters" class="form-label">Number of Clusters:</label>
+                        <input type="number" id="spectral_n_clusters" name="spectral_n_clusters" class="form-control" value="6" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="spectral_affinity" class="form-label">Affinity:</label>
+                        <select id="spectral_affinity" name="spectral_affinity" class="form-select">
+                            <option value="rbf">RBF</option>
+                            <option value="nearest_neighbors">Nearest Neighbors</option>
+                            <option value="precomputed">Precomputed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="spectral_gamma" class="form-label">Gamma:</label>
+                        <input type="number" step="0.1" id="spectral_gamma" name="spectral_gamma" class="form-control" value="1.0" min="0">
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <button type="submit" class="btn btn-success">Создать Задание</button>
+    </form>
+    
+    <!-- Валидация форм Bootstrap -->
+    <script>
+        // Пример валидации форм Bootstrap
+        (function () {
+            'use strict'
+    
+            // Получаем все формы с классом 'needs-validation'
+            var forms = document.querySelectorAll('.needs-validation')
+    
+            // Цикл по формам и добавление обработчика событий
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+    
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+    
+    <!-- Скрипт для отображения параметров в зависимости от выбранного метода -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const featureSelectionMethodSelect = document.getElementById('feature_selection_method');
+            const dimensionalityReductionMethodSelect = document.getElementById('dimensionality_reduction_method');
+            const clusteringAlgorithmSelect = document.getElementById('clustering_algorithm');
+    
+            featureSelectionMethodSelect.addEventListener('change', function() {
+                const selected = this.value;
+                document.querySelectorAll('#feature_selection_params .param-group').forEach(function(group) {
+                    group.style.display = 'none';
+                });
+                if (selected) {
+                    const paramGroup = document.getElementById(`param_${selected}`);
+                    if (paramGroup) {
+                        paramGroup.style.display = 'block';
+                    }
+                }
+            });
+    
+            dimensionalityReductionMethodSelect.addEventListener('change', function() {
+                const selected = this.value;
+                document.querySelectorAll('#dimensionality_reduction_params .param-group').forEach(function(group) {
+                    group.style.display = 'none';
+                });
+                if (selected) {
+                    const paramGroup = document.getElementById(`dim_param_${selected}`);
+                    if (paramGroup) {
+                        paramGroup.style.display = 'block';
+                    }
+                }
+            });
+    
+            clusteringAlgorithmSelect.addEventListener('change', function() {
+                const selected = this.value;
+                document.querySelectorAll('#clustering_params .clustering-param-group').forEach(function(group) {
+                    group.style.display = 'none';
+                });
+                if (selected) {
+                    const paramGroup = document.getElementById(`clustering_param_${selected}`);
+                    if (paramGroup) {
+                        paramGroup.style.display = 'block';
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

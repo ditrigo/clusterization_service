@@ -1,3 +1,5 @@
+# pipeline.py
+
 import pandas as pd
 import os
 from .modules.preprocessing import (
@@ -11,9 +13,9 @@ from .modules.feature_selection import (
     correlation_based_selection,
     kmeans_based_selection,
     mutual_info_selection,
+    variance_threshold_selection,
     pca_selection,
-    t_sne_selection,
-    variance_threshold_selection
+    t_sne_selection  # Оставляем здесь
 )
 from .modules.latent_space import (
     autoencoder_selection,
@@ -34,8 +36,6 @@ from .modules.visualization import visualize_clusters
 from django.core.files.base import ContentFile
 from django.conf import settings
 import logging
-import umap.umap_ as umap
-
 
 logger = logging.getLogger(__name__)
 
@@ -93,15 +93,21 @@ def execute_feature_selection(job):
             n_clusters = feature_selection_params.get('n_clusters', 3)
             top_n = feature_selection_params.get('top_n', 5)
             df_selected, selected_features = mutual_info_selection(df_final, n_clusters=n_clusters, top_n=top_n)
+        elif feature_selection_method == 'Variance Threshold':
+            threshold = feature_selection_params.get('threshold', 0.1)
+            df_selected, selected_features = variance_threshold_selection(df_final, threshold=threshold)
         elif feature_selection_method == 'PCA':
             n_components = feature_selection_params.get('n_components', 5)
-            df_selected, _ = pca_selection(df_final, n_components=n_components)
+            df_selected, explained_variance = pca_selection(df_final, n_components=n_components)
             selected_features = df_selected.columns.tolist()
+            # Можно сохранить объясненную дисперсию в параметры, если необходимо
+            job.parameters.parameters['feature_selection']['explained_variance'] = explained_variance
+            job.parameters.save()
         elif feature_selection_method == 't-SNE':
             n_components = feature_selection_params.get('n_components', 2)
             perplexity = feature_selection_params.get('perplexity', 30)
             learning_rate = feature_selection_params.get('learning_rate', 200)
-            df_selected, _ = t_sne_selection(
+            df_selected, tsne_obj = t_sne_selection(
                 df_final,
                 n_components=n_components,
                 perplexity=perplexity,
@@ -110,42 +116,15 @@ def execute_feature_selection(job):
                 method='exact'
             )
             selected_features = df_selected.columns.tolist()
-        elif feature_selection_method == 'Variance Threshold':
-            threshold = feature_selection_params.get('threshold', 0.1)
-            df_selected, selected_features = variance_threshold_selection(df_final, threshold=threshold)
-        elif feature_selection_method == 'Autoencoder':
-            encoding_dim = feature_selection_params.get('encoding_dim', 10)
-            epochs = feature_selection_params.get('epochs', 50)
-            batch_size = feature_selection_params.get('batch_size', 32)
-            df_selected = autoencoder_selection(df_final, encoding_dim=encoding_dim, epochs=epochs, batch_size=batch_size)
-            selected_features = df_selected.columns.tolist()
-        elif feature_selection_method == 'Kernel PCA':
-            n_components = feature_selection_params.get('n_components', 10)
-            kernel = feature_selection_params.get('kernel', 'rbf')
-            gamma = feature_selection_params.get('gamma', None)
-            df_selected = kernel_pca_selection(df_final, n_components=n_components, kernel=kernel, gamma=gamma)
-            selected_features = df_selected.columns.tolist()
-        elif feature_selection_method == 'Factor Analysis':
-            n_components = feature_selection_params.get('n_components', 10)
-            df_selected = factor_analysis_selection(df_final, n_components=n_components)
-            selected_features = df_selected.columns.tolist()
-        elif feature_selection_method == 'UMAP':
-            n_neighbors = feature_selection_params.get('n_neighbors', 15)
-            min_dist = feature_selection_params.get('min_dist', 0.1)
-            n_components = feature_selection_params.get('n_components', 10)
-            random_state = feature_selection_params.get('random_state', 42)
-            df_selected = umap_selection(
-                df_final,
-                n_neighbors=n_neighbors,
-                min_dist=min_dist,
-                n_components=n_components,
-                random_state=random_state
-            )
-            selected_features = df_selected.columns.tolist()
+            # Обратите внимание, что t-SNE не сохраняет объясненную дисперсию
         else:
             # Если метод не выбран или неизвестен, используем исходные данные
             df_selected = df_final
             selected_features = df_final.columns.tolist()
+
+        # Логирование
+        logger.debug(f"Selected Features: {selected_features}")
+        logger.debug(f"DataFrame Columns after Feature Selection: {df_selected.columns.tolist()}")
 
         # Сохранение промежуточных данных
         feature_selection_path = os.path.join(intermediate_dir, 'feature_selected.csv')
@@ -178,18 +157,47 @@ def execute_dimensionality_reduction(job):
         dimensionality_reduction_method = job.parameters.dimensionality_reduction_method
         dimensionality_reduction_params = job.parameters.parameters.get('dimensionality_reduction', {})
 
-        if dimensionality_reduction_method == 'UMAP':
-            n_components = dimensionality_reduction_params.get('n_components', 2)
+        if dimensionality_reduction_method == 'Autoencoder':
+            encoding_dim = dimensionality_reduction_params.get('encoding_dim', 10)
+            epochs = dimensionality_reduction_params.get('epochs', 50)
+            batch_size = dimensionality_reduction_params.get('batch_size', 32)
+            df_reduced = autoencoder_selection(df_selected, encoding_dim=encoding_dim, epochs=epochs, batch_size=batch_size)
+            selected_features = df_reduced.columns.tolist()
+        elif dimensionality_reduction_method == 'Kernel PCA':
+            n_components = dimensionality_reduction_params.get('n_components', 10)
+            kernel = dimensionality_reduction_params.get('kernel', 'rbf')
+            gamma = dimensionality_reduction_params.get('gamma', None)
+            df_reduced = kernel_pca_selection(df_selected, n_components=n_components, kernel=kernel, gamma=gamma)
+            selected_features = df_reduced.columns.tolist()
+        elif dimensionality_reduction_method == 'Factor Analysis':
+            n_components = dimensionality_reduction_params.get('n_components', 10)
+            df_reduced = factor_analysis_selection(df_selected, n_components=n_components)
+            selected_features = df_reduced.columns.tolist()
+        elif dimensionality_reduction_method == 'UMAP':
+            n_neighbors = dimensionality_reduction_params.get('n_neighbors', 15)
+            min_dist = dimensionality_reduction_params.get('min_dist', 0.1)
+            n_components = dimensionality_reduction_params.get('n_components', 10)
             random_state = dimensionality_reduction_params.get('random_state', 42)
-            reducer = umap.UMAP(n_components=n_components, random_state=random_state)
-            X_reduced = reducer.fit_transform(df_selected)
-            df_reduced = pd.DataFrame(X_reduced, columns=[f"UMAP_{i+1}" for i in range(n_components)])
+            df_reduced = umap_selection(
+                df_selected,
+                n_neighbors=n_neighbors,
+                min_dist=min_dist,
+                n_components=n_components,
+                random_state=random_state
+            )
+            selected_features = df_reduced.columns.tolist()
         else:
+            # Если метод не выбран или неизвестен, используем исходные данные
             df_reduced = df_selected
+            selected_features = df_selected.columns.tolist()
 
         # Сохранение промежуточных данных
         dimensionality_reduction_path = os.path.join(intermediate_dir, 'dimensionality_reduction.csv')
         df_reduced.to_csv(dimensionality_reduction_path, index=False)
+
+        # Сохранение выбранных признаков в параметрах (если необходимо)
+        job.parameters.parameters['dimensionality_reduction']['selected_features'] = selected_features
+        job.parameters.save()
 
         # Обновление статуса задания
         job.dimensionality_reduction_completed = True
@@ -279,8 +287,14 @@ def execute_metrics(job):
         if not selected_features:
             selected_features = [col for col in df_final.columns if col != 'Cluster']
 
+        # Проверка наличия признаков
+        existing_features = [feat for feat in selected_features if feat in df_final.columns]
+        missing_features = set(selected_features) - set(existing_features)
+        if missing_features:
+            raise KeyError(f"Некоторые выбранные признаки отсутствуют в данных: {missing_features}")
+
         # Вычисление метрик
-        metrics = calculate_metrics(df_final, features=selected_features, cluster_column='Cluster')
+        metrics = calculate_metrics(df_final, features=existing_features, cluster_column='Cluster')
         job.metrics = metrics
         job.metrics_completed = True
         job.save()

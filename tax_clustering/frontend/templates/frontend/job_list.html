@@ -1,0 +1,47 @@
+<!-- frontend/templates/frontend/job_list.html -->
+
+{% extends 'frontend/base.html' %}
+
+{% block title %}Список Заданий{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Список Заданий</h2>
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Датасет</th>
+                <th>Статус</th>
+                <th>Дата Создания</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+                <tr>
+                    <td>{{ job.id }}</td>
+                    <td>{{ job.dataset.name }}</td>
+                    <td>
+                        {% if job.status == 'Completed' %}
+                            <span class="badge bg-success">{{ job.status }}</span>
+                        {% elif job.status == 'Processing' %}
+                            <span class="badge bg-primary">{{ job.status }}</span>
+                        {% elif job.status == 'Failed' %}
+                            <span class="badge bg-danger">{{ job.status }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ job.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ job.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'frontend:job_detail' job.id %}" class="btn btn-sm btn-outline-primary">Детали</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Заданий не найдено.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

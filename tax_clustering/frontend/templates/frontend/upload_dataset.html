@@ -1,0 +1,17 @@
+<!-- frontend/templates/frontend/upload_dataset.html -->
+
+{% extends 'frontend/base.html' %}
+
+{% block content %}
+    <h2>Загрузить Датасет</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="name">Название:</label><br>
+        <input type="text" id="name" name="name" required><br><br>
+        
+        <label for="file">Выберите CSV-файл:</label><br>
+        <input type="file" id="file" name="file" accept=".csv" required><br><br>
+        
+        <button type="submit">Загрузить</button>
+    </form>
+{% endblock %}

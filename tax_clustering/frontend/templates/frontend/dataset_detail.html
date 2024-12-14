@@ -1,0 +1,30 @@
+<!-- frontend/templates/frontend/dataset_detail.html -->
+
+{% extends 'frontend/base.html' %}
+
+{% block title %}Детали Датасета{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Детали Датасета</h2>
+    {% if dataset %}
+        <div class="card mb-4">
+            <div class="card-header">
+                {{ dataset.name }}
+            </div>
+            <div class="card-body">
+                <p><strong>ID:</strong> {{ dataset.id }}</p>
+                <p><strong>Дата Загрузки:</strong> {{ dataset.uploaded_at|date:"d.m.Y H:i" }}</p>
+                <!-- Добавьте другие детали датасета, если они есть -->
+            </div>
+        </div>
+        
+        <h3>Файлы Датасета</h3>
+        {% if dataset.file %}
+            <a href="{{ dataset.file.url }}" class="btn btn-outline-primary" download>Скачать Файл</a>
+        {% else %}
+            <p>Файл не доступен.</p>
+        {% endif %}
+    {% else %}
+        <p>Датасет не найден.</p>
+    {% endif %}
+{% endblock %}

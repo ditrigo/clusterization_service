@@ -12,7 +12,8 @@ from scipy.stats import boxcox
 
 def correlation_based_selection(df, threshold=0.6):
     """
-    Удаляет признаки с высокой корреляцией.
+    Отбирает признаки на основе корреляции.
+    Удаляет признаки, корреляция которых с другими выше порога.
 
     :param df: pandas DataFrame, исходные данные
     :param threshold: float, порог корреляции для удаления признаков
@@ -24,7 +25,7 @@ def correlation_based_selection(df, threshold=0.6):
     )
     to_drop = [column for column in upper_triangle.columns if any(upper_triangle[column] > threshold)]
     df_reduced = df.drop(columns=to_drop)
-    return df_reduced, to_drop
+    return df_reduced, df_reduced.columns.tolist()
 
 def kmeans_based_selection(df, n_clusters=3, top_n=5):
     """

@@ -1,0 +1,134 @@
+<!-- frontend/templates/frontend/job_detail.html -->
+
+{% extends 'frontend/base.html' %}
+
+{% block title %}Детали Задания{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Детали Задания</h2>
+    {% if job %}
+        <div class="card mb-4">
+            <div class="card-header">
+                Задание {{ job.id }}
+            </div>
+            <div class="card-body">
+                <p><strong>Датасет:</strong> {{ job.dataset.name }}</p>
+                <p><strong>Статус:</strong> 
+                    {% if job.status == 'Completed' %}
+                        <span class="badge bg-success">{{ job.status }}</span>
+                    {% elif job.status == 'Processing' %}
+                        <span class="badge bg-primary">{{ job.status }}</span>
+                    {% elif job.status == 'Failed' %}
+                        <span class="badge bg-danger">{{ job.status }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ job.status }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Дата Создания:</strong> {{ job.created_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Дата Завершения:</strong> {{ job.completed_at|date:"d.m.Y H:i" }}</p>
+            </div>
+        </div>
+        
+        <form method="post" action="{% url 'frontend:execute_all_steps' job.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success mb-4">Выполнить Все Этапы</button>
+        </form>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Параметры
+            </div>
+            <div class="card-body">
+                <pre>{{ job.parameters.parameters|json_script:"parameters" }}</pre>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Метрики
+            </div>
+            <div class="card-body">
+                {% if job.metrics %}
+                    <ul class="list-group list-group-flush">
+                        {% for key, value in job.metrics.items %}
+                            <li class="list-group-item"><strong>{{ key }}:</strong> {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Метрики не рассчитаны.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Визуализации
+            </div>
+            <div class="card-body">
+                {% if job.visualizations %}
+                    <div class="row">
+                        {% for viz in job.visualizations %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <img src="{{ viz }}" class="card-img-top" alt="Visualization">
+                                    <div class="card-body text-center">
+                                        <a href="{{ viz }}" target="_blank" class="btn btn-primary btn-sm">Просмотреть</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>Визуализации не созданы.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                Действия
+            </div>
+            <div class="card-body">
+                <form method="post" class="mb-3">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="execute_all_steps" class="btn btn-success">Выполнить Все Стадии</button>
+                </form>
+                
+                <h5>Выполнить Отдельную Стадию</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="step" class="form-label">Выберите Стадию:</label>
+                        <select id="step" name="step" class="form-select" required>
+                            <option value="">--Выберите--</option>
+                            {% if not job.preprocessing_completed %}
+                                <option value="preprocess">Предобработка</option>
+                            {% endif %}
+                            {% if job.preprocessing_completed and not job.feature_selection_completed %}
+                                <option value="feature_selection">Отбор Признаков</option>
+                            {% endif %}
+                            {% if job.feature_selection_completed and not job.dimensionality_reduction_completed %}
+                                <option value="dimensionality_reduction">Снижение Размерности</option>
+                            {% endif %}
+                            {% if job.dimensionality_reduction_completed and not job.clustering_completed %}
+                                <option value="clustering">Кластеризация</option>
+                            {% endif %}
+                            {% if job.clustering_completed and not job.metrics_completed %}
+                                <option value="metrics">Вычисление Метрик</option>
+                            {% endif %}
+                            {% if job.metrics_completed and not job.visualization_completed %}
+                                <option value="visualization">Создание Визуализаций</option>
+                            {% endif %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Пожалуйста, выберите стадию для выполнения.
+                        </div>
+                    </div>
+                    <button type="submit" name="action" value="execute_step" class="btn btn-primary">Выполнить Стадию</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <p>Задание не найдено.</p>
+    {% endif %}
+{% endblock %}

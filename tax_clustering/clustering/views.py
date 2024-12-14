@@ -23,7 +23,7 @@ from .pipeline import (
 logger = logging.getLogger(__name__)
 
 class DatasetViewSet(viewsets.ModelViewSet):
-    queryset = Dataset.objects.all()
+    queryset = Dataset.objects.all().order_by('-uploaded_at')
     serializer_class = DatasetSerializer
     parser_classes = [MultiPartParser, FormParser]
 
@@ -33,7 +33,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
         return context
 
 class ClusteringJobViewSet(viewsets.ModelViewSet):
-    queryset = ClusteringJob.objects.all()
+    queryset = ClusteringJob.objects.all().order_by('-created_at')
     serializer_class = ClusteringJobSerializer
 
     def get_serializer_context(self):
@@ -174,7 +174,7 @@ class ClusteringJobViewSet(viewsets.ModelViewSet):
 
             # Обновление статуса задания
             job.status = 'Completed'
-            job.completed_at = pd.Timestamp.now()
+            # job.completed_at = pd.Timestamp.now()
             job.save()
 
             serializer = self.get_serializer(job)
@@ -185,3 +185,12 @@ class ClusteringJobViewSet(viewsets.ModelViewSet):
             logger.error(f"Error during executing all steps for job {job.id}: {e}", exc_info=True)
             return Response({"detail": "Error during executing all steps."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+    @action(detail=True, methods=['post'], url_path='execute_all_steps')
+    def execute_all_steps_action(self, request, pk=None):
+        try:
+            job = self.get_object()
+            execute_all_steps(job)
+            serializer = self.get_serializer(job)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
