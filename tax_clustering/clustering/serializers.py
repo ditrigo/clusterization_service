@@ -1,18 +1,38 @@
 from rest_framework import serializers
 from .models import Dataset, ClusteringJob, ClusteringParameters
+import pandas as pd
 
 class DatasetSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
+    columns = serializers.SerializerMethodField()
+    preview = serializers.SerializerMethodField()
 
     class Meta:
         model = Dataset
-        fields = ['id', 'name', 'uploaded_at', 'file', 'file_url']
+        fields = ['id', 'name', 'uploaded_at', 'file', 'file_url', 'columns', 'preview']
 
     def get_file_url(self, obj):
         request = self.context.get('request')
         if obj.file and hasattr(obj.file, 'url'):
             return request.build_absolute_uri(obj.file.url)
         return None
+
+    def get_columns(self, obj):
+        try:
+            # Считываем только первую строку для получения заголовков
+            df = pd.read_csv(obj.file.path, nrows=0)
+            return list(df.columns)
+        except Exception as e:
+            return []
+
+    def get_preview(self, obj):
+        try:
+            # Считываем первые 5 строк
+            df = pd.read_csv(obj.file.path, nrows=5)
+            # Преобразуем DataFrame в список словарей
+            return df.to_dict(orient='records')
+        except Exception as e:
+            return []
 
 class ClusteringParametersSerializer(serializers.ModelSerializer):
     feature_selection = serializers.DictField(write_only=True, required=False)
@@ -44,6 +64,8 @@ class ClusteringParametersSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 class ClusteringJobSerializer(serializers.ModelSerializer):
+    # Добавляем новое поле для названия датасета
+    dataset_name = serializers.CharField(source="dataset.name", read_only=True)
     parameters = ClusteringParametersSerializer()
     result_file_url = serializers.SerializerMethodField()
     metrics = serializers.JSONField(read_only=True)
@@ -61,7 +83,8 @@ class ClusteringJobSerializer(serializers.ModelSerializer):
         model = ClusteringJob
         fields = [
             'id',
-            'dataset',
+            'dataset',         # По-прежнему возвращается id датасета
+            'dataset_name',    # А теперь добавляем и его название
             'status',
             'created_at',
             'completed_at',

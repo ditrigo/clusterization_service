@@ -20,7 +20,7 @@
                 <tr>
                     <td>{{ dataset.id }}</td>
                     <td>{{ dataset.name }}</td>
-                    <td>{{ dataset.uploaded_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ dataset.uploaded_at }}</td>
                     <td>
                         <a href="{% url 'frontend:dataset_detail' dataset.id %}" class="btn btn-sm btn-outline-primary">Детали</a>
                     </td>

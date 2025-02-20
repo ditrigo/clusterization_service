@@ -26,7 +26,7 @@ def dataset_list(request):
 
 def dataset_detail(request, dataset_id):
     """
-    Отображает детали выбранного датасета.
+    Отображает детали выбранного датасета, включая заголовки и превью (первые 5 строк).
     
     :param request: HTTP-запрос
     :param dataset_id: UUID идентификатор датасета
@@ -39,7 +39,13 @@ def dataset_detail(request, dataset_id):
         dataset = None
         messages.error(request, "Не удалось загрузить детали датасета.")
     
-    return render(request, 'frontend/dataset_detail.html', {'dataset': dataset})
+    # Передаём поля columns и preview из ответа API (если они есть)
+    context = {
+        'dataset': dataset,
+        'columns': dataset.get('columns', []) if dataset else [],
+        'preview': dataset.get('preview', []) if dataset else []
+    }
+    return render(request, 'frontend/dataset_detail.html', context)
 
 def upload_dataset(request):
     if request.method == 'POST':

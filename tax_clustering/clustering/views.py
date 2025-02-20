@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
+from rest_framework.views import APIView
 from .models import Dataset, ClusteringJob
 from .serializers import DatasetSerializer, ClusteringJobSerializer
 from django.shortcuts import get_object_or_404
@@ -8,6 +9,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 import os
 import logging
 from django.conf import settings
+from .presets import PRESETS
+from datetime import datetime
 
 # Импорт функций обработки
 from .pipeline import (
@@ -145,6 +148,9 @@ class ClusteringJobViewSet(viewsets.ModelViewSet):
         try:
             execute_visualization(job)
             serializer = self.get_serializer(job)
+            job.status = 'Completed'
+            job.completed_at = datetime.now()
+            job.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             job.status = 'Failed'
@@ -194,3 +200,15 @@ class ClusteringJobViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class PresetListView(APIView):
+    def get(self, request):
+        preset_name = request.query_params.get('name', None)
+        if preset_name:
+            preset = next((p for p in PRESETS if p['name'] == preset_name), None)
+            if preset:
+                return Response(preset, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Пресет не найден."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(PRESETS, status=status.HTTP_200_OK)

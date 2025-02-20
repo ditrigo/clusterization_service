@@ -20,7 +20,7 @@
             {% for job in jobs %}
                 <tr>
                     <td>{{ job.id }}</td>
-                    <td>{{ job.dataset.name }}</td>
+                    <td>{{ job.dataset_name }}</td>
                     <td>
                         {% if job.status == 'Completed' %}
                             <span class="badge bg-success">{{ job.status }}</span>
@@ -32,7 +32,7 @@
                             <span class="badge bg-secondary">{{ job.status }}</span>
                         {% endif %}
                     </td>
-                    <td>{{ job.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ job.created_at }}</td>
                     <td>
                         <a href="{% url 'frontend:job_detail' job.id %}" class="btn btn-sm btn-outline-primary">Детали</a>
                     </td>

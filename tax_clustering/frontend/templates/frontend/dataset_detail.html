@@ -1,30 +1,54 @@
-<!-- frontend/templates/frontend/dataset_detail.html -->
-
 {% extends 'frontend/base.html' %}
+{% load dict_extras %}
 
 {% block title %}Детали Датасета{% endblock %}
 
 {% block content %}
-    <h2 class="mb-4">Детали Датасета</h2>
-    {% if dataset %}
-        <div class="card mb-4">
-            <div class="card-header">
-                {{ dataset.name }}
-            </div>
-            <div class="card-body">
-                <p><strong>ID:</strong> {{ dataset.id }}</p>
-                <p><strong>Дата Загрузки:</strong> {{ dataset.uploaded_at|date:"d.m.Y H:i" }}</p>
-                <!-- Добавьте другие детали датасета, если они есть -->
-            </div>
-        </div>
-        
-        <h3>Файлы Датасета</h3>
-        {% if dataset.file %}
-            <a href="{{ dataset.file.url }}" class="btn btn-outline-primary" download>Скачать Файл</a>
-        {% else %}
-            <p>Файл не доступен.</p>
-        {% endif %}
+  <h2 class="mb-4">Детали Датасета</h2>
+  {% if dataset %}
+    <div class="card mb-4">
+      <div class="card-header">
+        {{ dataset.name }}
+      </div>
+      <div class="card-body">
+        <p><strong>ID:</strong> {{ dataset.id }}</p>
+        <p><strong>Дата Загрузки:</strong> {{ dataset.uploaded_at|date:"d.m.Y H:i" }}</p>
+        <!-- Дополнительные детали можно добавить здесь -->
+      </div>
+    </div>
+    
+    <h3>Файлы Датасета</h3>
+    {% if dataset.file %}
+      <a href="{{ dataset.file.url }}" class="btn btn-outline-primary" download>Скачать Файл</a>
     {% else %}
-        <p>Датасет не найден.</p>
+      <p>Файл не доступен.</p>
     {% endif %}
+    
+    {% if columns and preview %}
+      <h3 class="mt-4">Превью: первые 5 строк</h3>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              {% for col in columns %}
+                <th>{{ col }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in preview %}
+              <tr>
+                {% for col in columns %}
+                  <td>{{ row|get_item:col }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  {% else %}
+    <p>Датасет не найден.</p>
+  {% endif %}
 {% endblock %}
+      
