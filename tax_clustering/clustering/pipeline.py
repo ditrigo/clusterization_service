@@ -35,6 +35,7 @@ from .modules.metrics import calculate_metrics
 from .modules.visualization import visualize_clusters
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -59,6 +60,14 @@ def execute_preprocessing(job):
         preprocessed_path = os.path.join(intermediate_dir, 'preprocessed.csv')
         df_final.to_csv(preprocessed_path, index=False)
 
+        relative_url = os.path.join(settings.MEDIA_URL, 'intermediate', str(job.id), os.path.basename(preprocessed_path))
+        
+        if not job.intermediate_files:
+            job.intermediate_files = [relative_url]
+        else:
+            job.intermediate_files.append(relative_url)
+        job.save()
+        
         # Обновление статуса задания
         job.preprocessing_completed = True
         job.save()
@@ -129,6 +138,14 @@ def execute_feature_selection(job):
         # Сохранение промежуточных данных
         feature_selection_path = os.path.join(intermediate_dir, 'feature_selected.csv')
         df_selected.to_csv(feature_selection_path, index=False)
+        
+        relative_url = os.path.join(settings.MEDIA_URL, 'intermediate', str(job.id), os.path.basename(feature_selection_path))
+        
+        if not job.intermediate_files:
+            job.intermediate_files = [relative_url]
+        else:
+            job.intermediate_files.append(relative_url)
+        job.save()
 
         # Сохранение выбранных признаков в параметрах
         job.parameters.parameters['feature_selection']['selected_features'] = selected_features
@@ -194,6 +211,14 @@ def execute_dimensionality_reduction(job):
         # Сохранение промежуточных данных
         dimensionality_reduction_path = os.path.join(intermediate_dir, 'dimensionality_reduction.csv')
         df_reduced.to_csv(dimensionality_reduction_path, index=False)
+
+        relative_url = os.path.join(settings.MEDIA_URL, 'intermediate', str(job.id), os.path.basename(dimensionality_reduction_path))
+        
+        if not job.intermediate_files:
+            job.intermediate_files = [relative_url]
+        else:
+            job.intermediate_files.append(relative_url)
+        job.save()
 
         # Сохранение выбранных признаков в параметрах (если необходимо)
         job.parameters.parameters['dimensionality_reduction']['selected_features'] = selected_features
@@ -263,6 +288,14 @@ def execute_clustering(job):
         clustering_path = os.path.join(intermediate_dir, 'clustering.csv')
         df_final.to_csv(clustering_path, index=False)
 
+        relative_url = os.path.join(settings.MEDIA_URL, 'intermediate', str(job.id), os.path.basename(clustering_path))
+        
+        if not job.intermediate_files:
+            job.intermediate_files = [relative_url]
+        else:
+            job.intermediate_files.append(relative_url)
+        job.save()
+        
         # Обновление статуса задания
         job.clustering_completed = True
         job.save()
@@ -353,7 +386,7 @@ def execute_all_steps(job):
 
         # Обновление статуса задания
         job.status = 'Completed'
-        job.completed_at = pd.Timestamp.now()
+        job.completed_at = timezone.now()
         job.save()
 
         logger.info(f"All steps completed for job {job.id}")

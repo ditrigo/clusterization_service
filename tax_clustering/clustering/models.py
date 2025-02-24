@@ -49,6 +49,7 @@ class ClusteringJob(models.Model):
 
     # Поле для хранения промежуточных данных
     intermediate_data = models.FileField(upload_to='intermediate/', null=True, blank=True)
+    intermediate_files = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"Job {self.id} - {self.status}"

@@ -1,499 +1,511 @@
 {% extends 'frontend/base.html' %}
+{% load dict_extras %}
 
 {% block title %}Создать Задание{% endblock %}
 
 {% block content %}
-    <h2 class="mb-4">Создать Кластеризационное Задание</h2>
-    <form method="post" class="needs-validation" novalidate>
-        {% csrf_token %}
-        
-        <div class="mb-3">
-            <label for="dataset" class="form-label">Выберите Датасет:</label>
-            <select id="dataset" name="dataset" class="form-select" required>
-                <option value="">--Выберите--</option>
-                {% for dataset in datasets %}
-                    <option value="{{ dataset.id }}">{{ dataset.name }}</option>
-                {% endfor %}
-            </select>
-            <div class="invalid-feedback">
-                Пожалуйста, выберите датасет.
-            </div>
-        </div>
+  <h2 class="mb-4">Создать Кластеризационное Задание</h2>
+  <form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <div class="mb-3">
+      <label for="dataset" class="form-label">Выберите Датасет:</label>
+      <select id="dataset" name="dataset" class="form-select" required>
+        <option value="">--Выберите--</option>
+        {% for dataset in datasets %}
+          <option value="{{ dataset.id }}">{{ dataset.name }}</option>
+        {% endfor %}
+      </select>
+      <div class="invalid-feedback">
+        Пожалуйста, выберите датасет.
+      </div>
+    </div>
 
-        <!-- Новый блок выбора пресета -->
+    <!-- Новый блок выбора пресета -->
+    <div class="mb-3">
+      <label for="preset_selector" class="form-label">Выберите пресет данных:</label>
+      <select id="preset_selector" name="preset" class="form-select">
+        <option value="">--Без пресета--</option>
+        <!-- Пресеты будут загружены динамически -->
+      </select>
+      <div class="form-text">
+        Выберите пресет, чтобы автоматически заполнить параметры обработки.
+      </div>
+    </div>
+    
+    <!-- Кнопка для показа/скрытия параметров -->
+    <button class="btn btn-secondary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#parametersCollapse" aria-expanded="false" aria-controls="parametersCollapse">
+      Показать/Скрыть параметры
+    </button>
+    
+    <div class="collapse" id="parametersCollapse">
+      <!-- Отбор Признаков -->
+      <fieldset class="mb-3 border p-3">
+        <legend class="w-auto px-2">Отбор Признаков</legend>
         <div class="mb-3">
-            <label for="preset_selector" class="form-label">Выберите пресет данных:</label>
-            <select id="preset_selector" name="preset" class="form-select">
-                <option value="">--Без пресета--</option>
-                <!-- Пресеты будут загружены динамически -->
-            </select>
-            <div class="form-text">
-                Выберите пресет, чтобы автоматически заполнить параметры обработки.
-            </div>
+          <label for="feature_selection_method" class="form-label">Метод:</label>
+          <select id="feature_selection_method" name="feature_selection_method" class="form-select" required>
+            <option value="">--Выберите--</option>
+            <option value="Correlation">Correlation</option>
+            <option value="KMeans">KMeans</option>
+            <option value="Mutual Information">Mutual Information</option>
+            <option value="Variance Threshold">Variance Threshold</option>
+            <option value="PCA">PCA</option>
+            <option value="t-SNE">t-SNE</option>
+          </select>
+          <div class="invalid-feedback">
+            Пожалуйста, выберите метод отбора признаков.
+          </div>
         </div>
         
-        <fieldset class="mb-3">
-            <legend>Отбор Признаков</legend>
+        <!-- Параметры для различных методов -->
+        <div id="feature_selection_params">
+          <!-- Пример для Correlation -->
+          <div class="param-group" id="param_Correlation" style="display:none;">
             <div class="mb-3">
-                <label for="feature_selection_method" class="form-label">Метод:</label>
-                <select id="feature_selection_method" name="feature_selection_method" class="form-select" required>
-                    <option value="">--Выберите--</option>
-                    <option value="Correlation">Correlation</option>
-                    <option value="KMeans">KMeans</option>
-                    <option value="Mutual Information">Mutual Information</option>
-                    <option value="Variance Threshold">Variance Threshold</option>
-                    <option value="PCA">PCA</option>
-                    <option value="t-SNE">t-SNE</option>
-                </select>
-                <div class="invalid-feedback">
-                    Пожалуйста, выберите метод отбора признаков.
-                </div>
+              <label for="threshold" class="form-label">Threshold:</label>
+              <input type="number" step="0.01" id="threshold" name="threshold" class="form-control" value="0.6" min="0" max="1">
             </div>
-            
-            <!-- Параметры для различных методов -->
-            <div id="feature_selection_params">
-                <!-- Пример для Correlation -->
-                <div class="param-group" id="param_Correlation" style="display:none;">
-                    <div class="mb-3">
-                        <label for="threshold" class="form-label">Threshold:</label>
-                        <input type="number" step="0.01" id="threshold" name="threshold" class="form-control" value="0.6" min="0" max="1">
-                    </div>
-                </div>
-                <!-- Пример для KMeans -->
-                <div class="param-group" id="param_KMeans" style="display:none;">
-                    <div class="mb-3">
-                        <label for="kmeans_n_clusters" class="form-label">Number of Clusters:</label>
-                        <input type="number" id="kmeans_n_clusters" name="kmeans_n_clusters" class="form-control" value="3" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="kmeans_top_n" class="form-label">Top N Features:</label>
-                        <input type="number" id="kmeans_top_n" name="kmeans_top_n" class="form-control" value="5" min="1">
-                    </div>
-                </div>
-                <!-- Пример для Mutual Information -->
-                <div class="param-group" id="param_Mutual Information" style="display:none;">
-                    <div class="mb-3">
-                        <label for="mi_n_clusters" class="form-label">Number of Clusters:</label>
-                        <input type="number" id="mi_n_clusters" name="mi_n_clusters" class="form-control" value="3" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="mi_top_n" class="form-label">Top N Features:</label>
-                        <input type="number" id="mi_top_n" name="mi_top_n" class="form-control" value="5" min="1">
-                    </div>
-                </div>
-                <!-- Пример для Variance Threshold -->
-                <div class="param-group" id="param_Variance Threshold" style="display:none;">
-                    <div class="mb-3">
-                        <label for="variance_threshold" class="form-label">Variance Threshold:</label>
-                        <input type="number" step="0.01" id="variance_threshold" name="variance_threshold" class="form-control" value="0.1" min="0">
-                    </div>
-                </div>
-                <!-- Пример для PCA -->
-                <div class="param-group" id="param_PCA" style="display:none;">
-                    <div class="mb-3">
-                        <label for="pca_n_components" class="form-label">Number of Components:</label>
-                        <input type="number" id="pca_n_components" name="pca_n_components" class="form-control" value="5" min="1">
-                    </div>
-                </div>
-                <!-- Пример для t-SNE -->
-                <div class="param-group" id="param_t-SNE" style="display:none;">
-                    <div class="mb-3">
-                        <label for="tsne_n_components" class="form-label">Number of Components:</label>
-                        <input type="number" id="tsne_n_components" name="tsne_n_components" class="form-control" value="2" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="tsne_perplexity" class="form-label">Perplexity:</label>
-                        <input type="number" step="0.1" id="tsne_perplexity" name="tsne_perplexity" class="form-control" value="30" min="5">
-                    </div>
-                    <div class="mb-3">
-                        <label for="tsne_learning_rate" class="form-label">Learning Rate:</label>
-                        <input type="number" step="1" id="tsne_learning_rate" name="tsne_learning_rate" class="form-control" value="200" min="10">
-                    </div>
-                </div>
-            </div>
-        </fieldset>
-        
-        <fieldset class="mb-3">
-            <legend>Снижение Размерности</legend>
+          </div>
+          <!-- Пример для KMeans -->
+          <div class="param-group" id="param_KMeans" style="display:none;">
             <div class="mb-3">
-                <label for="dimensionality_reduction_method" class="form-label">Метод:</label>
-                <select id="dimensionality_reduction_method" name="dimensionality_reduction_method" class="form-select" required>
-                    <option value="">--Выберите--</option>
-                    <option value="Autoencoder">Autoencoder</option>
-                    <option value="Kernel PCA">Kernel PCA</option>
-                    <option value="Factor Analysis">Factor Analysis</option>
-                    <option value="UMAP">UMAP</option>
-                    <option value="t-SNE">t-SNE</option>
-                </select>
-                <div class="invalid-feedback">
-                    Пожалуйста, выберите метод снижения размерности.
-                </div>
+              <label for="kmeans_n_clusters" class="form-label">Number of Clusters:</label>
+              <input type="number" id="kmeans_n_clusters" name="kmeans_n_clusters" class="form-control" value="3" min="1">
             </div>
-            
-            <!-- Параметры для методов снижения размерности -->
-            <div id="dimensionality_reduction_params">
-                <!-- Autoencoder -->
-                <div class="param-group" id="dim_param_Autoencoder" style="display:none;">
-                    <div class="mb-3">
-                        <label for="autoencoder_encoding_dim" class="form-label">Encoding Dimension:</label>
-                        <input type="number" id="autoencoder_encoding_dim" name="autoencoder_encoding_dim" class="form-control" value="10" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="autoencoder_epochs" class="form-label">Epochs:</label>
-                        <input type="number" id="autoencoder_epochs" name="autoencoder_epochs" class="form-control" value="50" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="autoencoder_batch_size" class="form-label">Batch Size:</label>
-                        <input type="number" id="autoencoder_batch_size" name="autoencoder_batch_size" class="form-control" value="32" min="1">
-                    </div>
-                </div>
-                <!-- Kernel PCA -->
-                <div class="param-group" id="dim_param_Kernel PCA" style="display:none;">
-                    <div class="mb-3">
-                        <label for="kernelpca_n_components" class="form-label">Number of Components:</label>
-                        <input type="number" id="kernelpca_n_components" name="kernelpca_n_components" class="form-control" value="10" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="kernelpca_kernel" class="form-label">Kernel:</label>
-                        <select id="kernelpca_kernel" name="kernelpca_kernel" class="form-select">
-                            <option value="rbf">RBF</option>
-                            <option value="linear">Linear</option>
-                            <option value="poly">Polynomial</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="kernelpca_gamma" class="form-label">Gamma:</label>
-                        <input type="number" step="0.01" id="kernelpca_gamma" name="kernelpca_gamma" class="form-control" value="" min="0">
-                    </div>
-                </div>
-                <!-- Factor Analysis -->
-                <div class="param-group" id="dim_param_Factor Analysis" style="display:none;">
-                    <div class="mb-3">
-                        <label for="factor_analysis_n_components" class="form-label">Number of Components:</label>
-                        <input type="number" id="factor_analysis_n_components" name="factor_analysis_n_components" class="form-control" value="10" min="1">
-                    </div>
-                </div>
-                <!-- UMAP -->
-                <div class="param-group" id="dim_param_UMAP" style="display:none;">
-                    <div class="mb-3">
-                        <label for="umap_n_neighbors" class="form-label">Number of Neighbors:</label>
-                        <input type="number" id="umap_n_neighbors" name="umap_n_neighbors" class="form-control" value="15" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="umap_min_dist" class="form-label">Min Dist:</label>
-                        <input type="number" step="0.01" id="umap_min_dist" name="umap_min_dist" class="form-control" value="0.1" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label for="umap_n_components" class="form-label">Number of Components:</label>
-                        <input type="number" id="umap_n_components" name="umap_n_components" class="form-control" value="10" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="umap_random_state" class="form-label">Random State:</label>
-                        <input type="number" id="umap_random_state" name="umap_random_state" class="form-control" value="42" min="0">
-                    </div>
-                </div>
-                <!-- t-SNE -->
-                <div class="param-group" id="dim_param_t-SNE" style="display:none;">
-                    <div class="mb-3">
-                        <label for="tsne_n_components" class="form-label">Number of Components:</label>
-                        <input type="number" id="tsne_n_components" name="tsne_n_components" class="form-control" value="2" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="tsne_perplexity" class="form-label">Perplexity:</label>
-                        <input type="number" step="0.1" id="tsne_perplexity" name="tsne_perplexity" class="form-control" value="30" min="5">
-                    </div>
-                    <div class="mb-3">
-                        <label for="tsne_learning_rate" class="form-label">Learning Rate:</label>
-                        <input type="number" step="1" id="tsne_learning_rate" name="tsne_learning_rate" class="form-control" value="200" min="10">
-                    </div>
-                </div>
-            </div>
-        </fieldset>
-        
-        <fieldset class="mb-3">
-            <legend>Кластеризация</legend>
             <div class="mb-3">
-                <label for="clustering_algorithm" class="form-label">Алгоритм:</label>
-                <select id="clustering_algorithm" name="clustering_algorithm" class="form-select" required>
-                    <option value="">--Выберите--</option>
-                    <option value="DBSCAN">DBSCAN</option>
-                    <option value="GMM">GMM</option>
-                    <option value="Hierarchical">Hierarchical</option>
-                    <option value="KMeans">KMeans</option>
-                    <option value="OPTICS">OPTICS</option>
-                    <option value="Spectral">Spectral</option>
-                </select>
-                <div class="invalid-feedback">
-                    Пожалуйста, выберите алгоритм кластеризации.
-                </div>
+              <label for="kmeans_top_n" class="form-label">Top N Features:</label>
+              <input type="number" id="kmeans_top_n" name="kmeans_top_n" class="form-control" value="5" min="1">
             </div>
-            
-            <!-- Параметры для алгоритмов кластеризации -->
-            <div id="clustering_params">
-                <!-- DBSCAN -->
-                <div class="clustering-param-group" id="clustering_param_DBSCAN" style="display:none;">
-                    <div class="mb-3">
-                        <label for="dbscan_eps" class="form-label">Epsilon (eps):</label>
-                        <input type="number" step="0.01" id="dbscan_eps" name="dbscan_eps" class="form-control" value="1.5" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label for="dbscan_min_samples" class="form-label">Min Samples:</label>
-                        <input type="number" id="dbscan_min_samples" name="dbscan_min_samples" class="form-control" value="5" min="1">
-                    </div>
-                </div>
-                <!-- GMM -->
-                <div class="clustering-param-group" id="clustering_param_GMM" style="display:none;">
-                    <div class="mb-3">
-                        <label for="gmm_n_components" class="form-label">Number of Components:</label>
-                        <input type="number" id="gmm_n_components" name="gmm_n_components" class="form-control" value="6" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="gmm_random_state" class="form-label">Random State:</label>
-                        <input type="number" id="gmm_random_state" name="gmm_random_state" class="form-control" value="42" min="0">
-                    </div>
-                </div>
-                <!-- Hierarchical -->
-                <div class="clustering-param-group" id="clustering_param_Hierarchical" style="display:none;">
-                    <div class="mb-3">
-                        <label for="hierarchical_n_clusters" class="form-label">Number of Clusters:</label>
-                        <input type="number" id="hierarchical_n_clusters" name="hierarchical_n_clusters" class="form-control" value="3" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="hierarchical_linkage" class="form-label">Linkage:</label>
-                        <select id="hierarchical_linkage" name="hierarchical_linkage" class="form-select">
-                            <option value="ward">Ward</option>
-                            <option value="complete">Complete</option>
-                            <option value="average">Average</option>
-                            <option value="single">Single</option>
-                        </select>
-                    </div>
-                </div>
-                <!-- KMeans -->
-                <div class="clustering-param-group" id="clustering_param_KMeans" style="display:none;">
-                    <div class="mb-3">
-                        <label for="kmeans_n_clusters" class="form-label">Number of Clusters:</label>
-                        <input type="number" id="kmeans_n_clusters" name="kmeans_n_clusters" class="form-control" value="3" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="kmeans_random_state" class="form-label">Random State:</label>
-                        <input type="number" id="kmeans_random_state" name="kmeans_random_state" class="form-control" value="42" min="0">
-                    </div>
-                </div>
-                <!-- OPTICS -->
-                <div class="clustering-param-group" id="clustering_param_OPTICS" style="display:none;">
-                    <div class="mb-3">
-                        <label for="optics_min_samples" class="form-label">Min Samples:</label>
-                        <input type="number" id="optics_min_samples" name="optics_min_samples" class="form-control" value="10" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="optics_xi" class="form-label">Xi:</label>
-                        <input type="number" step="0.01" id="optics_xi" name="optics_xi" class="form-control" value="0.05" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label for="optics_min_cluster_size" class="form-label">Min Cluster Size:</label>
-                        <input type="number" step="0.01" id="optics_min_cluster_size" name="optics_min_cluster_size" class="form-control" value="0.1" min="0">
-                    </div>
-                </div>
-                <!-- Spectral -->
-                <div class="clustering-param-group" id="clustering_param_Spectral" style="display:none;">
-                    <div class="mb-3">
-                        <label for="spectral_n_clusters" class="form-label">Number of Clusters:</label>
-                        <input type="number" id="spectral_n_clusters" name="spectral_n_clusters" class="form-control" value="6" min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="spectral_affinity" class="form-label">Affinity:</label>
-                        <select id="spectral_affinity" name="spectral_affinity" class="form-select">
-                            <option value="rbf">RBF</option>
-                            <option value="nearest_neighbors">Nearest Neighbors</option>
-                            <option value="precomputed">Precomputed</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="spectral_gamma" class="form-label">Gamma:</label>
-                        <input type="number" step="0.1" id="spectral_gamma" name="spectral_gamma" class="form-control" value="1.0" min="0">
-                    </div>
-                </div>
+          </div>
+          <!-- Пример для Mutual Information -->
+          <div class="param-group" id="param_Mutual Information" style="display:none;">
+            <div class="mb-3">
+              <label for="mi_n_clusters" class="form-label">Number of Clusters:</label>
+              <input type="number" id="mi_n_clusters" name="mi_n_clusters" class="form-control" value="3" min="1">
             </div>
-        </fieldset>
+            <div class="mb-3">
+              <label for="mi_top_n" class="form-label">Top N Features:</label>
+              <input type="number" id="mi_top_n" name="mi_top_n" class="form-control" value="5" min="1">
+            </div>
+          </div>
+          <!-- Пример для Variance Threshold -->
+          <div class="param-group" id="param_Variance Threshold" style="display:none;">
+            <div class="mb-3">
+              <label for="variance_threshold" class="form-label">Variance Threshold:</label>
+              <input type="number" step="0.01" id="variance_threshold" name="variance_threshold" class="form-control" value="0.1" min="0">
+            </div>
+          </div>
+          <!-- Пример для PCA -->
+          <div class="param-group" id="param_PCA" style="display:none;">
+            <div class="mb-3">
+              <label for="pca_n_components" class="form-label">Number of Components:</label>
+              <input type="number" id="pca_n_components" name="pca_n_components" class="form-control" value="5" min="1">
+            </div>
+          </div>
+          <!-- Пример для t-SNE -->
+          <div class="param-group" id="param_t-SNE" style="display:none;">
+            <div class="mb-3">
+              <label for="tsne_n_components" class="form-label">Number of Components:</label>
+              <input type="number" id="tsne_n_components" name="tsne_n_components" class="form-control" value="2" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="tsne_perplexity" class="form-label">Perplexity:</label>
+              <input type="number" step="0.1" id="tsne_perplexity" name="tsne_perplexity" class="form-control" value="30" min="5">
+            </div>
+            <div class="mb-3">
+              <label for="tsne_learning_rate" class="form-label">Learning Rate:</label>
+              <input type="number" step="1" id="tsne_learning_rate" name="tsne_learning_rate" class="form-control" value="200" min="10">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      
+      <!-- Снижение Размерности -->
+      <fieldset class="mb-3 border p-3">
+        <legend class="w-auto px-2">Снижение Размерности</legend>
+        <div class="mb-3">
+          <label for="dimensionality_reduction_method" class="form-label">Метод:</label>
+          <select id="dimensionality_reduction_method" name="dimensionality_reduction_method" class="form-select" required>
+            <option value="">--Выберите--</option>
+            <option value="Autoencoder">Autoencoder</option>
+            <option value="Kernel PCA">Kernel PCA</option>
+            <option value="Factor Analysis">Factor Analysis</option>
+            <option value="UMAP">UMAP</option>
+            <option value="t-SNE">t-SNE</option>
+          </select>
+          <div class="invalid-feedback">
+            Пожалуйста, выберите метод снижения размерности.
+          </div>
+        </div>
         
+        <!-- Параметры для методов снижения размерности -->
+        <div id="dimensionality_reduction_params">
+          <!-- Autoencoder -->
+          <div class="param-group" id="dim_param_Autoencoder" style="display:none;">
+            <div class="mb-3">
+              <label for="autoencoder_encoding_dim" class="form-label">Encoding Dimension:</label>
+              <input type="number" id="autoencoder_encoding_dim" name="autoencoder_encoding_dim" class="form-control" value="10" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="autoencoder_epochs" class="form-label">Epochs:</label>
+              <input type="number" id="autoencoder_epochs" name="autoencoder_epochs" class="form-control" value="50" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="autoencoder_batch_size" class="form-label">Batch Size:</label>
+              <input type="number" id="autoencoder_batch_size" name="autoencoder_batch_size" class="form-control" value="32" min="1">
+            </div>
+          </div>
+          <!-- Kernel PCA -->
+          <div class="param-group" id="dim_param_Kernel PCA" style="display:none;">
+            <div class="mb-3">
+              <label for="kernelpca_n_components" class="form-label">Number of Components:</label>
+              <input type="number" id="kernelpca_n_components" name="kernelpca_n_components" class="form-control" value="10" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="kernelpca_kernel" class="form-label">Kernel:</label>
+              <select id="kernelpca_kernel" name="kernelpca_kernel" class="form-select">
+                <option value="rbf">RBF</option>
+                <option value="linear">Linear</option>
+                <option value="poly">Polynomial</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="kernelpca_gamma" class="form-label">Gamma:</label>
+              <input type="number" step="0.01" id="kernelpca_gamma" name="kernelpca_gamma" class="form-control" value="" min="0">
+            </div>
+          </div>
+          <!-- Factor Analysis -->
+          <div class="param-group" id="dim_param_Factor Analysis" style="display:none;">
+            <div class="mb-3">
+              <label for="factor_analysis_n_components" class="form-label">Number of Components:</label>
+              <input type="number" id="factor_analysis_n_components" name="factor_analysis_n_components" class="form-control" value="10" min="1">
+            </div>
+          </div>
+          <!-- UMAP -->
+          <div class="param-group" id="dim_param_UMAP" style="display:none;">
+            <div class="mb-3">
+              <label for="umap_n_neighbors" class="form-label">Number of Neighbors:</label>
+              <input type="number" id="umap_n_neighbors" name="umap_n_neighbors" class="form-control" value="15" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="umap_min_dist" class="form-label">Min Dist:</label>
+              <input type="number" step="0.01" id="umap_min_dist" name="umap_min_dist" class="form-control" value="0.1" min="0">
+            </div>
+            <div class="mb-3">
+              <label for="umap_n_components" class="form-label">Number of Components:</label>
+              <input type="number" id="umap_n_components" name="umap_n_components" class="form-control" value="10" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="umap_random_state" class="form-label">Random State:</label>
+              <input type="number" id="umap_random_state" name="umap_random_state" class="form-control" value="42" min="0">
+            </div>
+          </div>
+          <!-- t-SNE -->
+          <div class="param-group" id="dim_param_t-SNE" style="display:none;">
+            <div class="mb-3">
+              <label for="tsne_n_components" class="form-label">Number of Components:</label>
+              <input type="number" id="tsne_n_components" name="tsne_n_components" class="form-control" value="2" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="tsne_perplexity" class="form-label">Perplexity:</label>
+              <input type="number" step="0.1" id="tsne_perplexity" name="tsne_perplexity" class="form-control" value="30" min="5">
+            </div>
+            <div class="mb-3">
+              <label for="tsne_learning_rate" class="form-label">Learning Rate:</label>
+              <input type="number" step="1" id="tsne_learning_rate" name="tsne_learning_rate" class="form-control" value="200" min="10">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      
+      <!-- Кластеризация -->
+      <fieldset class="mb-3 border p-3">
+        <legend class="w-auto px-2">Кластеризация</legend>
+        <div class="mb-3">
+          <label for="clustering_algorithm" class="form-label">Алгоритм:</label>
+          <select id="clustering_algorithm" name="clustering_algorithm" class="form-select" required>
+            <option value="">--Выберите--</option>
+            <option value="DBSCAN">DBSCAN</option>
+            <option value="GMM">GMM</option>
+            <option value="Hierarchical">Hierarchical</option>
+            <option value="KMeans">KMeans</option>
+            <option value="OPTICS">OPTICS</option>
+            <option value="Spectral">Spectral</option>
+          </select>
+          <div class="invalid-feedback">
+            Пожалуйста, выберите алгоритм кластеризации.
+          </div>
+        </div>
+        
+        <!-- Параметры для алгоритмов кластеризации -->
+        <div id="clustering_params">
+          <!-- DBSCAN -->
+          <div class="clustering-param-group" id="clustering_param_DBSCAN" style="display:none;">
+            <div class="mb-3">
+              <label for="dbscan_eps" class="form-label">Epsilon (eps):</label>
+              <input type="number" step="0.01" id="dbscan_eps" name="dbscan_eps" class="form-control" value="1.5" min="0">
+            </div>
+            <div class="mb-3">
+              <label for="dbscan_min_samples" class="form-label">Min Samples:</label>
+              <input type="number" id="dbscan_min_samples" name="dbscan_min_samples" class="form-control" value="5" min="1">
+            </div>
+          </div>
+          <!-- GMM -->
+          <div class="clustering-param-group" id="clustering_param_GMM" style="display:none;">
+            <div class="mb-3">
+              <label for="gmm_n_components" class="form-label">Number of Components:</label>
+              <input type="number" id="gmm_n_components" name="gmm_n_components" class="form-control" value="6" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="gmm_random_state" class="form-label">Random State:</label>
+              <input type="number" id="gmm_random_state" name="gmm_random_state" class="form-control" value="42" min="0">
+            </div>
+          </div>
+          <!-- Hierarchical -->
+          <div class="clustering-param-group" id="clustering_param_Hierarchical" style="display:none;">
+            <div class="mb-3">
+              <label for="hierarchical_n_clusters" class="form-label">Number of Clusters:</label>
+              <input type="number" id="hierarchical_n_clusters" name="hierarchical_n_clusters" class="form-control" value="3" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="hierarchical_linkage" class="form-label">Linkage:</label>
+              <select id="hierarchical_linkage" name="hierarchical_linkage" class="form-select">
+                <option value="ward">Ward</option>
+                <option value="complete">Complete</option>
+                <option value="average">Average</option>
+                <option value="single">Single</option>
+              </select>
+            </div>
+          </div>
+          <!-- KMeans -->
+          <div class="clustering-param-group" id="clustering_param_KMeans" style="display:none;">
+            <div class="mb-3">
+              <label for="kmeans_n_clusters" class="form-label">Number of Clusters:</label>
+              <input type="number" id="kmeans_n_clusters" name="kmeans_n_clusters" class="form-control" value="3" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="kmeans_random_state" class="form-label">Random State:</label>
+              <input type="number" id="kmeans_random_state" name="kmeans_random_state" class="form-control" value="42" min="0">
+            </div>
+          </div>
+          <!-- OPTICS -->
+          <div class="clustering-param-group" id="clustering_param_OPTICS" style="display:none;">
+            <div class="mb-3">
+              <label for="optics_min_samples" class="form-label">Min Samples:</label>
+              <input type="number" id="optics_min_samples" name="optics_min_samples" class="form-control" value="10" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="optics_xi" class="form-label">Xi:</label>
+              <input type="number" step="0.01" id="optics_xi" name="optics_xi" class="form-control" value="0.05" min="0">
+            </div>
+            <div class="mb-3">
+              <label for="optics_min_cluster_size" class="form-label">Min Cluster Size:</label>
+              <input type="number" step="0.01" id="optics_min_cluster_size" name="optics_min_cluster_size" class="form-control" value="0.1" min="0">
+            </div>
+          </div>
+          <!-- Spectral -->
+          <div class="clustering-param-group" id="clustering_param_Spectral" style="display:none;">
+            <div class="mb-3">
+              <label for="spectral_n_clusters" class="form-label">Number of Clusters:</label>
+              <input type="number" id="spectral_n_clusters" name="spectral_n_clusters" class="form-control" value="6" min="1">
+            </div>
+            <div class="mb-3">
+              <label for="spectral_affinity" class="form-label">Affinity:</label>
+              <select id="spectral_affinity" name="spectral_affinity" class="form-select">
+                <option value="rbf">RBF</option>
+                <option value="nearest_neighbors">Nearest Neighbors</option>
+                <option value="precomputed">Precomputed</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="spectral_gamma" class="form-label">Gamma:</label>
+              <input type="number" step="0.1" id="spectral_gamma" name="spectral_gamma" class="form-control" value="1.0" min="0">
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div>
         <button type="submit" class="btn btn-success">Создать Задание</button>
-    </form>
-    
-    <!-- Валидация форм Bootstrap -->
-    <script>
-        (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
-    </script>
-    
-    <!-- Скрипт для отображения параметров и автозаполнения пресетов -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Отображение параметров выбранных методов
-            const featureSelectionMethodSelect = document.getElementById('feature_selection_method');
-            const dimensionalityReductionMethodSelect = document.getElementById('dimensionality_reduction_method');
-            const clusteringAlgorithmSelect = document.getElementById('clustering_algorithm');
-    
-            featureSelectionMethodSelect.addEventListener('change', function() {
-                const selected = this.value;
-                document.querySelectorAll('#feature_selection_params .param-group').forEach(group => {
-                    group.style.display = 'none';
-                });
-                if (selected) {
-                    const paramGroup = document.getElementById(`param_${selected}`);
-                    if (paramGroup) paramGroup.style.display = 'block';
-                }
-            });
-    
-            dimensionalityReductionMethodSelect.addEventListener('change', function() {
-                const selected = this.value;
-                document.querySelectorAll('#dimensionality_reduction_params .param-group').forEach(group => {
-                    group.style.display = 'none';
-                });
-                if (selected) {
-                    const paramGroup = document.getElementById(`dim_param_${selected}`);
-                    if (paramGroup) paramGroup.style.display = 'block';
-                }
-            });
-    
-            clusteringAlgorithmSelect.addEventListener('change', function() {
-                const selected = this.value;
-                document.querySelectorAll('#clustering_params .clustering-param-group').forEach(group => {
-                    group.style.display = 'none';
-                });
-                if (selected) {
-                    const paramGroup = document.getElementById(`clustering_param_${selected}`);
-                    if (paramGroup) paramGroup.style.display = 'block';
-                }
-            });
-    
-            // Работа с пресетами: получение списка с бэка и автозаполнение полей
-            const presetSelector = document.getElementById('preset_selector');
-            let presetsData = [];
-            fetch('/api/presets/')
-                .then(response => response.json())
-                .then(data => {
-                    presetsData = data;
-                    data.forEach(preset => {
-                        const option = document.createElement('option');
-                        option.value = preset.name;
-                        option.textContent = preset.name;
-                        presetSelector.appendChild(option);
-                    });
-                })
-                .catch(err => console.error('Ошибка загрузки пресетов:', err));
-    
-            presetSelector.addEventListener('change', function() {
-                const selectedPresetName = this.value;
-                if (!selectedPresetName) return;
-    
-                const presetData = presetsData.find(p => p.name === selectedPresetName);
-                if (!presetData) return;
-    
-                // Автозаполнение отбора признаков
-                if (presetData.feature_selection) {
-                    featureSelectionMethodSelect.value = presetData.feature_selection.method || '';
-                    featureSelectionMethodSelect.dispatchEvent(new Event('change'));
-                    if (presetData.feature_selection.threshold !== undefined) {
-                        const thresholdInput = document.getElementById('threshold');
-                        if(thresholdInput) thresholdInput.value = presetData.feature_selection.threshold;
-                    }
-                    if (presetData.feature_selection.n_clusters !== undefined) {
-                        const kmeansClusters = document.getElementById('kmeans_n_clusters');
-                        const miClusters = document.getElementById('mi_n_clusters');
-                        if(kmeansClusters) kmeansClusters.value = presetData.feature_selection.n_clusters;
-                        if(miClusters) miClusters.value = presetData.feature_selection.n_clusters;
-                    }
-                    if (presetData.feature_selection.top_n !== undefined) {
-                        const kmeansTop = document.getElementById('kmeans_top_n');
-                        const miTop = document.getElementById('mi_top_n');
-                        if(kmeansTop) kmeansTop.value = presetData.feature_selection.top_n;
-                        if(miTop) miTop.value = presetData.feature_selection.top_n;
-                    }
-                }
-    
-                // Автозаполнение снижения размерности
-                if (presetData.dimensionality_reduction) {
-                    dimensionalityReductionMethodSelect.value = presetData.dimensionality_reduction.method || '';
-                    dimensionalityReductionMethodSelect.dispatchEvent(new Event('change'));
-                    const dr = presetData.dimensionality_reduction;
-                    // Для Autoencoder
-                    if (dr.method === "Autoencoder") {
-                        document.getElementById('autoencoder_encoding_dim').value = dr.encoding_dim || 10;
-                        document.getElementById('autoencoder_epochs').value = dr.epochs || 50;
-                        document.getElementById('autoencoder_batch_size').value = dr.batch_size || 32;
-                    }
-                    // Для Kernel PCA
-                    if (dr.method === "Kernel PCA") {
-                        document.getElementById('kernelpca_n_components').value = dr.n_components || 10;
-                        document.getElementById('kernelpca_kernel').value = dr.kernel || 'rbf';
-                        if(dr.gamma !== undefined) {
-                            document.getElementById('kernelpca_gamma').value = dr.gamma || 2;
-                        }
-                    }
-                    // Для Factor Analysis
-                    if (dr.method === "Factor Analysis") {
-                        document.getElementById('factor_analysis_n_components').value = dr.n_components || 10;
-                    }
-                    // Для UMAP
-                    if (dr.method === "UMAP") {
-                        document.getElementById('umap_n_neighbors').value = dr.n_neighbors || 15;
-                        document.getElementById('umap_min_dist').value = dr.min_dist || 0.1;
-                        document.getElementById('umap_n_components').value = dr.n_components || 10;
-                        document.getElementById('umap_random_state').value = dr.random_state || 42;
-                    }
-                    // Для t-SNE
-                    if (dr.method === "t-SNE") {
-                        document.getElementById('tsne_n_components').value = dr.n_components || 2;
-                        document.getElementById('tsne_perplexity').value = dr.perplexity || 30;
-                        document.getElementById('tsne_learning_rate').value = dr.learning_rate || 200;
-                    }
-                }
-    
-                // Автозаполнение кластеризации
-                if (presetData.clustering) {
-                    clusteringAlgorithmSelect.value = presetData.clustering.algorithm || '';
-                    clusteringAlgorithmSelect.dispatchEvent(new Event('change'));
-                    const cl = presetData.clustering;
-                    if (cl.algorithm === "DBSCAN") {
-                        document.getElementById('dbscan_eps').value = cl.eps || 1.5;
-                        document.getElementById('dbscan_min_samples').value = cl.min_samples || 5;
-                    }
-                    if (cl.algorithm === "GMM") {
-                        document.getElementById('gmm_n_components').value = cl.n_components || 6;
-                        document.getElementById('gmm_random_state').value = cl.random_state || 42;
-                    }
-                    if (cl.algorithm === "Hierarchical") {
-                        document.getElementById('hierarchical_n_clusters').value = cl.n_clusters || 3;
-                        document.getElementById('hierarchical_linkage').value = cl.linkage || 'ward';
-                    }
-                    if (cl.algorithm === "KMeans") {
-                        document.getElementById('kmeans_n_clusters').value = cl.n_clusters || 3;
-                        document.getElementById('kmeans_random_state').value = cl.random_state || 42;
-                    }
-                    if (cl.algorithm === "OPTICS") {
-                        document.getElementById('optics_min_samples').value = cl.min_samples || 10;
-                        document.getElementById('optics_xi').value = cl.xi || 0.05;
-                        document.getElementById('optics_min_cluster_size').value = cl.min_cluster_size || 0.1;
-                    }
-                    if (cl.algorithm === "Spectral") {
-                        document.getElementById('spectral_n_clusters').value = cl.n_clusters || 6;
-                        document.getElementById('spectral_affinity').value = cl.affinity || 'rbf';
-                        document.getElementById('spectral_gamma').value = cl.gamma || 1.0;
-                    }
-                }
-            });
+    </div>
+  </form>
+  
+  <!-- Валидация форм Bootstrap -->
+  <script>
+    (function () {
+      'use strict'
+      var forms = document.querySelectorAll('.needs-validation')
+      Array.prototype.slice.call(forms)
+          .forEach(function (form) {
+              form.addEventListener('submit', function (event) {
+                  if (!form.checkValidity()) {
+                      event.preventDefault()
+                      event.stopPropagation()
+                  }
+                  form.classList.add('was-validated')
+              }, false)
+          })
+    })()
+  </script>
+  
+  <!-- Скрипт для отображения параметров и автозаполнения пресетов -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Отображение параметров выбранных методов
+      const featureSelectionMethodSelect = document.getElementById('feature_selection_method');
+      const dimensionalityReductionMethodSelect = document.getElementById('dimensionality_reduction_method');
+      const clusteringAlgorithmSelect = document.getElementById('clustering_algorithm');
+  
+      featureSelectionMethodSelect.addEventListener('change', function() {
+        const selected = this.value;
+        document.querySelectorAll('#feature_selection_params .param-group').forEach(group => {
+          group.style.display = 'none';
         });
-    </script>
+        if (selected) {
+          const paramGroup = document.getElementById(`param_${selected}`);
+          if (paramGroup) paramGroup.style.display = 'block';
+        }
+      });
+  
+      dimensionalityReductionMethodSelect.addEventListener('change', function() {
+        const selected = this.value;
+        document.querySelectorAll('#dimensionality_reduction_params .param-group').forEach(group => {
+          group.style.display = 'none';
+        });
+        if (selected) {
+          const paramGroup = document.getElementById(`dim_param_${selected}`);
+          if (paramGroup) paramGroup.style.display = 'block';
+        }
+      });
+  
+      clusteringAlgorithmSelect.addEventListener('change', function() {
+        const selected = this.value;
+        document.querySelectorAll('#clustering_params .clustering-param-group').forEach(group => {
+          group.style.display = 'none';
+        });
+        if (selected) {
+          const paramGroup = document.getElementById(`clustering_param_${selected}`);
+          if (paramGroup) paramGroup.style.display = 'block';
+        }
+      });
+  
+      // Работа с пресетами: получение списка с бэка и автозаполнение полей
+      const presetSelector = document.getElementById('preset_selector');
+      let presetsData = [];
+      fetch('/api/presets/')
+          .then(response => response.json())
+          .then(data => {
+              presetsData = data;
+              data.forEach(preset => {
+                  const option = document.createElement('option');
+                  option.value = preset.name;
+                  option.textContent = preset.name;
+                  presetSelector.appendChild(option);
+              });
+          })
+          .catch(err => console.error('Ошибка загрузки пресетов:', err));
+  
+      presetSelector.addEventListener('change', function() {
+          const selectedPresetName = this.value;
+          if (!selectedPresetName) return;
+  
+          const presetData = presetsData.find(p => p.name === selectedPresetName);
+          if (!presetData) return;
+  
+          // Автозаполнение отбора признаков
+          if (presetData.feature_selection) {
+              featureSelectionMethodSelect.value = presetData.feature_selection.method || '';
+              featureSelectionMethodSelect.dispatchEvent(new Event('change'));
+              if (presetData.feature_selection.threshold !== undefined) {
+                  const thresholdInput = document.getElementById('threshold');
+                  if(thresholdInput) thresholdInput.value = presetData.feature_selection.threshold;
+              }
+              if (presetData.feature_selection.n_clusters !== undefined) {
+                  const kmeansClusters = document.getElementById('kmeans_n_clusters');
+                  const miClusters = document.getElementById('mi_n_clusters');
+                  if(kmeansClusters) kmeansClusters.value = presetData.feature_selection.n_clusters;
+                  if(miClusters) miClusters.value = presetData.feature_selection.n_clusters;
+              }
+              if (presetData.feature_selection.top_n !== undefined) {
+                  const kmeansTop = document.getElementById('kmeans_top_n');
+                  const miTop = document.getElementById('mi_top_n');
+                  if(kmeansTop) kmeansTop.value = presetData.feature_selection.top_n;
+                  if(miTop) miTop.value = presetData.feature_selection.top_n;
+              }
+          }
+  
+          // Автозаполнение снижения размерности
+          if (presetData.dimensionality_reduction) {
+              dimensionalityReductionMethodSelect.value = presetData.dimensionality_reduction.method || '';
+              dimensionalityReductionMethodSelect.dispatchEvent(new Event('change'));
+              const dr = presetData.dimensionality_reduction;
+              // Для Autoencoder
+              if (dr.method === "Autoencoder") {
+                  document.getElementById('autoencoder_encoding_dim').value = dr.encoding_dim || 10;
+                  document.getElementById('autoencoder_epochs').value = dr.epochs || 50;
+                  document.getElementById('autoencoder_batch_size').value = dr.batch_size || 32;
+              }
+              // Для Kernel PCA
+              if (dr.method === "Kernel PCA") {
+                  document.getElementById('kernelpca_n_components').value = dr.n_components || 10;
+                  document.getElementById('kernelpca_kernel').value = dr.kernel || 'rbf';
+                  if(dr.gamma !== undefined) {
+                      document.getElementById('kernelpca_gamma').value = dr.gamma || 2;
+                  }
+              }
+              // Для Factor Analysis
+              if (dr.method === "Factor Analysis") {
+                  document.getElementById('factor_analysis_n_components').value = dr.n_components || 10;
+              }
+              // Для UMAP
+              if (dr.method === "UMAP") {
+                  document.getElementById('umap_n_neighbors').value = dr.n_neighbors || 15;
+                  document.getElementById('umap_min_dist').value = dr.min_dist || 0.1;
+                  document.getElementById('umap_n_components').value = dr.n_components || 10;
+                  document.getElementById('umap_random_state').value = dr.random_state || 42;
+              }
+              // Для t-SNE
+              if (dr.method === "t-SNE") {
+                  document.getElementById('tsne_n_components').value = dr.n_components || 2;
+                  document.getElementById('tsne_perplexity').value = dr.perplexity || 30;
+                  document.getElementById('tsne_learning_rate').value = dr.learning_rate || 200;
+              }
+          }
+  
+          // Автозаполнение кластеризации
+          if (presetData.clustering) {
+              clusteringAlgorithmSelect.value = presetData.clustering.algorithm || '';
+              clusteringAlgorithmSelect.dispatchEvent(new Event('change'));
+              const cl = presetData.clustering;
+              if (cl.algorithm === "DBSCAN") {
+                  document.getElementById('dbscan_eps').value = cl.eps || 1.5;
+                  document.getElementById('dbscan_min_samples').value = cl.min_samples || 5;
+              }
+              if (cl.algorithm === "GMM") {
+                  document.getElementById('gmm_n_components').value = cl.n_components || 6;
+                  document.getElementById('gmm_random_state').value = cl.random_state || 42;
+              }
+              if (cl.algorithm === "Hierarchical") {
+                  document.getElementById('hierarchical_n_clusters').value = cl.n_clusters || 3;
+                  document.getElementById('hierarchical_linkage').value = cl.linkage || 'ward';
+              }
+              if (cl.algorithm === "KMeans") {
+                  document.getElementById('kmeans_n_clusters').value = cl.n_clusters || 3;
+                  document.getElementById('kmeans_random_state').value = cl.random_state || 42;
+              }
+              if (cl.algorithm === "OPTICS") {
+                  document.getElementById('optics_min_samples').value = cl.min_samples || 10;
+                  document.getElementById('optics_xi').value = cl.xi || 0.05;
+                  document.getElementById('optics_min_cluster_size').value = cl.min_cluster_size || 0.1;
+              }
+              if (cl.algorithm === "Spectral") {
+                  document.getElementById('spectral_n_clusters').value = cl.n_clusters || 6;
+                  document.getElementById('spectral_affinity').value = cl.affinity || 'rbf';
+                  document.getElementById('spectral_gamma').value = cl.gamma || 1.0;
+              }
+          }
+      });
+    });
+  </script>
 {% endblock %}

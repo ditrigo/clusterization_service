@@ -68,6 +68,7 @@ class ClusteringJobSerializer(serializers.ModelSerializer):
     dataset_name = serializers.CharField(source="dataset.name", read_only=True)
     parameters = ClusteringParametersSerializer()
     result_file_url = serializers.SerializerMethodField()
+    intermediate_files = serializers.JSONField(read_only=True)  # Новое поле для списка промежуточных файлов
     metrics = serializers.JSONField(read_only=True)
     visualizations = serializers.JSONField(read_only=True)
 
@@ -83,13 +84,14 @@ class ClusteringJobSerializer(serializers.ModelSerializer):
         model = ClusteringJob
         fields = [
             'id',
-            'dataset',         # По-прежнему возвращается id датасета
-            'dataset_name',    # А теперь добавляем и его название
+            'dataset',         # Возвращается id датасета
+            'dataset_name',    # И его название
             'status',
             'created_at',
             'completed_at',
             'result_file',
             'result_file_url',
+            'intermediate_files',  # Список URL промежуточных файлов
             'parameters',
             'metrics',
             'visualizations',

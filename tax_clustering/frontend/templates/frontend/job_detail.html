@@ -1,4 +1,5 @@
 {% extends 'frontend/base.html' %}
+{% load dict_extras %}
 
 {% block title %}Детали Задания{% endblock %}
 
@@ -37,7 +38,7 @@
   <h2 class="mb-4">Детали Задания</h2>
   {% if job %}
     <div class="row">
-      <!-- Левая колонка: базовая информация о задании -->
+      <!-- Левая колонка: базовая информация, параметры, метрики и визуализации -->
       <div class="col-md-8">
         <div class="card mb-4 fade-in">
           <div class="card-header">
@@ -117,9 +118,39 @@
             {% endif %}
           </div>
         </div>
+
+        <!-- Блок для скачивания промежуточного CSV-файла -->
+        {% if job.intermediate_files %}
+          <div class="card mb-4 fade-in">
+            <div class="card-header">
+              Промежуточные данные
+            </div>
+            <div class="card-body">
+              <p>Здесь сохранены промежуточные состояния датасета в формате CSV.</p>
+              <ul class="list-group">
+                {% for file_url in job.intermediate_files %}
+                  <li class="list-group-item">
+                    {% if "preprocessed.csv" in file_url %}
+                      <strong>Предобработка:</strong>
+                    {% elif "feature_selected.csv" in file_url %}
+                      <strong>Отбор Признаков:</strong>
+                    {% elif "dimensionality_reduction.csv" in file_url %}
+                      <strong>Снижение Размерности:</strong>
+                    {% elif "clustering.csv" in file_url %}
+                      <strong>Кластеризация:</strong>
+                    {% else %}
+                      <strong>Промежуточный файл:</strong>
+                    {% endif %}
+                    <a href="{{ file_url }}" class="btn btn-outline-primary btn-sm" download>Скачать CSV</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        {% endif %}
       </div>
       
-      <!-- Правая колонка: этапы выполнения -->
+      <!-- Правая колонка с этапами выполнения -->
       <div class="col-md-4">
         <h4 class="mb-3">Этапы выполнения</h4>
         

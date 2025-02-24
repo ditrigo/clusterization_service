@@ -30,6 +30,7 @@ class Migration(migrations.Migration):
                 ('metrics_completed', models.BooleanField(default=False)),
                 ('visualization_completed', models.BooleanField(default=False)),
                 ('intermediate_data', models.FileField(blank=True, null=True, upload_to='intermediate/')),
+                ('intermediate_files', models.JSONField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(
