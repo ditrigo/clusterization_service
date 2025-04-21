@@ -17,4 +17,5 @@ urlpatterns = [
     path('jobs/<uuid:job_id>/execute_all_steps/', views.execute_all_steps, name='execute_all_steps'),
     path('datasets/', views.dataset_list, name='dataset_list'),
     path('datasets/<uuid:dataset_id>/', views.dataset_detail, name='dataset_detail'),
+    path('risk-analysis/<uuid:job_id>/', views.risk_analysis, name='risk_analysis'),
 ]

@@ -272,3 +272,8 @@ def execute_all_steps(request, job_id):
         return redirect(reverse('frontend:job_detail', args=[job_id]))
     else:
         return redirect(reverse('frontend:job_detail', args=[job_id]))
+    
+    
+def risk_analysis(request, job_id):
+    context = {"job_id": job_id}
+    return render(request, 'frontend/risk_analysis.html', context)

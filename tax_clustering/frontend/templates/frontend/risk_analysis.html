@@ -1,0 +1,74 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Анализ риска{% endblock %}
+
+{% block content %}
+  <h2>Анализ риска</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Идентификатор записи</th>
+        <th>Риск</th>
+        <th>Цвет шкалы</th>
+        <th>Действие</th>
+      </tr>
+    </thead>
+    <tbody id="risk-table-body">
+      <!-- Данные будут загружаться через JS -->
+    </tbody>
+  </table>
+  
+  <!-- Модальное окно для отображения SHAP графика -->
+  <div class="modal fade" id="shapModal" tabindex="-1" aria-labelledby="shapModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shapModalLabel">SHAP объяснение</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <img id="shapImage" src="" alt="SHAP график" class="img-fluid">
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Предполагается, что job_id передается через context или URL
+      const jobId = "{{ job_id }}";
+      fetch(`/api/risk-analysis/${jobId}/`)
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.getElementById("risk-table-body");
+          data.data.forEach((record, index) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${index}</td>
+              <td>${record.risk_score.toFixed(2)}</td>
+              <td style="background-color: ${record.risk_color};">${record.risk_color}</td>
+              <td><button class="btn btn-primary btn-sm view-shap" data-index="${index}">Посмотреть SHAP</button></td>
+            `;
+            tableBody.appendChild(tr);
+          });
+          
+          // Обработчик клика для кнопок
+          document.querySelectorAll(".view-shap").forEach(btn => {
+            btn.addEventListener("click", function() {
+              const recordIndex = btn.getAttribute("data-index");
+              fetch(`/api/risk-analysis/${jobId}/${recordIndex}/`)
+                .then(response => response.json())
+                .then(data => {
+                  document.getElementById("shapImage").src = data.shap_url;
+                  // Открываем модальное окно (Bootstrap 5)
+                  var myModal = new bootstrap.Modal(document.getElementById('shapModal'));
+                  myModal.show();
+                });
+            });
+          });
+        });
+    });
+  </script>
+{% endblock %}

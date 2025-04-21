@@ -297,6 +297,15 @@
             {% endif %}
           </div>
         </div>
+
+        <!-- Добавляем новую карточку для перехода к оценке рисков -->
+        <div class="card mb-3 step-card fade-in">
+          <div class="card-body text-center">
+            <a href="{% url 'frontend:risk_analysis' job.id %}" class="btn btn-warning">
+              Оценка рисков
+            </a>
+          </div>
+        </div>
         
         <!-- Блок "Выполнить все стадии" -->
         <div class="card mb-4 fade-in">
