@@ -224,37 +224,22 @@ class PresetListView(APIView):
     
     
 class RiskAnalysisView(APIView):
-    """
-    Эндпоинт для получения анализа риска по заданию.
-    Предполагается, что финальные данные для расчёта риска уже сформированы
-    (например, после кластеризации) и хранятся в intermediate файле или в базе.
-    """
     def get(self, request, job_id):
-        try:
-            job = ClusteringJob.objects.get(id=job_id)
-            intermediate_dir = os.path.join(settings.MEDIA_ROOT, 'intermediate', str(job.id))
-            clustering_path = os.path.join(intermediate_dir, 'clustering.csv')
-            df = pd.read_csv(clustering_path)
-            
-            risk_scores = []
-            for idx, row in df.iterrows():
-                risk_value = risk.compute_risk_score(row.to_frame().T)
-                risk_scores.append(risk_value)
-            df['risk_score'] = risk_scores
-
-            def color_code(risk):
-                if risk < 0.33:
-                    return "green"
-                elif risk < 0.66:
-                    return "yellow"
-                else:
-                    return "red"
-            df['risk_color'] = df['risk_score'].apply(color_code)
-            
-            data = df.to_dict(orient='records')
-            return Response({"data": data}, status=200)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=500)
+        job = ClusteringJob.objects.get(id=job_id)
+        path = os.path.join(settings.MEDIA_ROOT, 'intermediate', str(job.id), 'clustering.csv')
+        df = pd.read_csv(path)
+        df_data = df.drop(columns=['Cluster'], errors='ignore')
+        raw = df_data.sum(axis=1)
+        lo, hi = raw.min(), raw.max()
+        if hi > lo:
+            norm = (raw - lo) / (hi - lo)
+        else:
+            norm = pd.Series(0, index=raw.index)
+        df['risk_score'] = norm
+        df['risk_color'] = df['risk_score'].apply(
+            lambda v: 'green' if v < .50 else ('yellow' if v < .75 else 'red')
+        )
+        return Response({'data': df.to_dict(orient='records')}, status=200)
         
         
 
