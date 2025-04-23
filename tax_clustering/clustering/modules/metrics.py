@@ -1,14 +1,11 @@
+import logging
+
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    silhouette_score,
-    davies_bouldin_score,
-    adjusted_rand_score,
-    normalized_mutual_info_score,
-    calinski_harabasz_score
-)
 from scipy.spatial.distance import cdist
-import logging
+from sklearn.metrics import (adjusted_rand_score, calinski_harabasz_score,
+                             davies_bouldin_score,
+                             normalized_mutual_info_score, silhouette_score)
 
 logger = logging.getLogger(__name__)
 

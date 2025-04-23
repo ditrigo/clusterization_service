@@ -1,7 +1,9 @@
-import pandas as pd
-from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering, OPTICS, SpectralClustering
-from sklearn.mixture import GaussianMixture
 import logging
+
+import pandas as pd
+from sklearn.cluster import (DBSCAN, OPTICS, AgglomerativeClustering, KMeans,
+                             SpectralClustering)
+from sklearn.mixture import GaussianMixture
 
 logger = logging.getLogger(__name__)
 

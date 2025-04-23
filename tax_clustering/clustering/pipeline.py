@@ -1,42 +1,31 @@
 # pipeline.py
 
-import pandas as pd
-import os
-from .modules.preprocessing import (
-    handle_missing_values_auto,
-    remove_outliers,
-    analyze_distributions,
-    apply_transformations,
-    apply_scalers
-)
-from .modules.feature_selection import (
-    correlation_based_selection,
-    kmeans_based_selection,
-    mutual_info_selection,
-    variance_threshold_selection,
-    pca_selection,
-    t_sne_selection  # Оставляем здесь
-)
-from .modules.latent_space import (
-    autoencoder_selection,
-    kernel_pca_selection,
-    factor_analysis_selection,
-    umap_selection
-)
-from .modules.clustering_methods import (
-    dbscan_clustering,
-    gmm_clustering,
-    hierarchical_clustering,
-    kmeans_clustering,
-    optics_clustering,
-    spectral_clustering
-)
-from .modules.metrics import calculate_metrics
-from .modules.visualization import visualize_clusters
-from django.core.files.base import ContentFile
-from django.conf import settings
-from django.utils import timezone
 import logging
+import os
+
+import pandas as pd
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.utils import timezone
+
+from .modules.clustering_methods import (dbscan_clustering, gmm_clustering,
+                                         hierarchical_clustering,
+                                         kmeans_clustering, optics_clustering,
+                                         spectral_clustering)
+from .modules.feature_selection import t_sne_selection  # Оставляем здесь
+from .modules.feature_selection import (correlation_based_selection,
+                                        kmeans_based_selection,
+                                        mutual_info_selection, pca_selection,
+                                        variance_threshold_selection)
+from .modules.latent_space import (autoencoder_selection,
+                                   factor_analysis_selection,
+                                   kernel_pca_selection, umap_selection)
+from .modules.metrics import calculate_metrics
+from .modules.preprocessing import (analyze_distributions, apply_scalers,
+                                    apply_transformations,
+                                    handle_missing_values_auto,
+                                    remove_outliers)
+from .modules.visualization import visualize_clusters
 
 logger = logging.getLogger(__name__)
 

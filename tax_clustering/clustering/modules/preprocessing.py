@@ -1,9 +1,12 @@
-import pandas as pd
-import numpy as np
 import math
+
+import numpy as np
+import pandas as pd
 from scipy import stats
 from scipy.stats import boxcox
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, LabelEncoder
+from sklearn.preprocessing import (LabelEncoder, MinMaxScaler, RobustScaler,
+                                   StandardScaler)
+
 
 def determine_strategy(column, missing_ratio_threshold=0.5):
     """Определяет способ обработки пропусков в зависимости от характеристик данных."""
@@ -115,7 +118,7 @@ def apply_transformations(df, column_distributions):
             transformed_series = np.log1p(series.clip(lower=0))
             transform_info[column] = 'log'
         elif distribution == 'lognorm':
-            positive_series = series.clip(lower=1e-6)  # Заменяем 0 на очень малое число
+            positive_series = series.clip(lower=1e-6)
             transformed_series, _ = boxcox(positive_series)
             transform_info[column] = 'box-cox'
         elif distribution == 'uniform':

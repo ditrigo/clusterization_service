@@ -1,6 +1,8 @@
-from rest_framework import serializers
-from .models import Dataset, ClusteringJob, ClusteringParameters
 import pandas as pd
+from rest_framework import serializers
+
+from .models import ClusteringJob, ClusteringParameters, Dataset
+
 
 class DatasetSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()

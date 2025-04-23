@@ -1,6 +1,8 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import DatasetViewSet, ClusteringJobViewSet, PresetListView, RiskAnalysisView, RiskShapExplanationView
+
+from .views import (ClusteringJobViewSet, DatasetViewSet, PresetListView,
+                    RiskAnalysisView, RiskShapExplanationView)
 
 router = DefaultRouter()
 router.register(r'datasets', DatasetViewSet, basename='dataset')

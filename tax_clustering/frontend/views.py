@@ -1,11 +1,12 @@
 # frontend/views.py
 
+import uuid
+
 import requests
-from django.shortcuts import render, redirect
-from django.urls import reverse
 from django.conf import settings
 from django.contrib import messages
-import uuid
+from django.shortcuts import redirect, render
+from django.urls import reverse
 
 # Базовый URL API
 API_BASE_URL = "http://localhost:8000/api"

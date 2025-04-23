@@ -1,11 +1,12 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow.keras import layers, models
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import KernelPCA, FactorAnalysis
 import umap.umap_ as umap
-import matplotlib.pyplot as plt
+from sklearn.decomposition import FactorAnalysis, KernelPCA
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras import layers, models
+
 
 def autoencoder_selection(df, encoding_dim=10, epochs=50, batch_size=32):
     """

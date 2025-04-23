@@ -1,17 +1,18 @@
-import pandas as pd
-import numpy as np
+import base64
+import logging
+import os
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.cluster.hierarchy as sch
 import seaborn as sns
+import umap
+from django.conf import settings
+from django.core.files.base import ContentFile
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.metrics import pairwise_distances
-import scipy.cluster.hierarchy as sch
-import umap
-import os
-from django.conf import settings
-from django.core.files.base import ContentFile
-import base64
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -1,14 +1,15 @@
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import Lasso
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from sklearn.feature_selection import mutual_info_classif, VarianceThreshold
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.cluster import KMeans
 from scipy import stats
 from scipy.stats import boxcox
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.feature_selection import VarianceThreshold, mutual_info_classif
+from sklearn.linear_model import Lasso
+from sklearn.manifold import TSNE
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
 
 def correlation_based_selection(df, threshold=0.6):
     """

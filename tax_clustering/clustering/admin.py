@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Dataset, ClusteringJob, ClusteringParameters
+
+from .models import ClusteringJob, ClusteringParameters, Dataset
 
 admin.site.register(Dataset)
 admin.site.register(ClusteringJob)
